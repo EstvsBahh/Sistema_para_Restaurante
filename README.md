@@ -32,11 +32,12 @@ Facilitar o atendimento do restaurante, permitindo registrar pedidos, acompanhar
 | Flask 
 | HTML 
 | CSS 
-| SQLite 
+| MYSQL
 
 
 ## Integrantes
 
-* Bárbara Ferreira Esteves
+* Bárbara Esteves
 * Gabriel Ferrari
+* Julia Roberta
 * Kamilly Ribeiro
