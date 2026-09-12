@@ -1,0 +1,3 @@
+USE restaurante;
+
+SHOW TABLES;
