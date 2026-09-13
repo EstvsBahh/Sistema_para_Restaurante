@@ -1,10 +1,12 @@
-from flask import Flask, render_template
-from config import Config
+
 from extensions import db
 from routes import registrar_rotas
 import models  
 from dotenv import load_dotenv
 load_dotenv()
+
+from flask import Flask, render_template
+from config import Config
 
 def criar_app():
     app = Flask(__name__)
