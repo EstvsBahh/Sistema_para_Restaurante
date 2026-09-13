@@ -22,5 +22,5 @@ def registrar_pagamento(numero):
     pedido.finalizar() 
     pedido.mesa.liberar() 
     db.session.add(pagamento) 
-db.session.commit() 
-return redirect(url_for("pagamento.painel_caixa"))
+    db.session.commit() 
+    return redirect(url_for("pagamento.painel_caixa"))
