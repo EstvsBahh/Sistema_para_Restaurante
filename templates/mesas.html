@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Mesas</h1>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('mesa.cadastrar_mesa') }}">
+        <input type="number" name="numero" placeholder="Número da mesa" required>
+        <button type="submit">Cadastrar mesa</button>
+    </form>
+</div>
+
+<div class="grid">
+    {% for mesa in mesas %}
+    <div class="mesa {{ mesa.situacao }}">
+        Mesa {{ mesa.numero }}<br>
+        {{ mesa.situacao }}
+        {% if mesa.situacao == "ocupada" %}
+        <form method="POST" action="{{ url_for('mesa.liberar_mesa', numero=mesa.numero) }}">
+            <button type="submit">Liberar</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Controle de Estoque</h1>
+
+<table>
+    <tr><th>Produto</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Situação</th><th>Repor</th></tr>
+    {% for produto in produtos %}
+    <tr class="{{ 'estoque-baixo' if produto.estoque_baixo() else '' }}">
+        <td>{{ produto.nome }}</td>
+        <td>{{ produto.quantidade_estoque }}</td>
+        <td>{{ produto.estoque_minimo }}</td>
+        <td>
+            {% if produto.quantidade_estoque == 0 %}
+                Sem estoque
+            {% elif produto.estoque_baixo() %}
+                Estoque baixo
+            {% else %}
+                Normal
+            {% endif %}
+        </td>
+        <td>
+            <form class="inline" method="POST" action="{{ url_for('produto.entrada_estoque', produto_id=produto.id) }}">
+                <input type="number" name="quantidade" placeholder="Qtd." style="width:70px" required>
+                <button type="submit">Repor</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

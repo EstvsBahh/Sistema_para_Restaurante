@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Pedido #{{ pedido.numero }} — Mesa {{ pedido.mesa_numero }}</h1>
+<p>Garçom: {{ pedido.garcom.nome }} | Estado: <span class="badge {{ pedido.estado }}">{{ pedido.estado }}</span></p>
+
+<div class="card">
+    <h3>Adicionar produto</h3>
+    {% if pedido.estado == "aberto" %}
+    <form method="POST" action="{{ url_for('pedido.adicionar_item', numero=pedido.numero) }}">
+        <select name="produto_id" required>
+            <option value="" disabled selected>Produto</option>
+            {% for produto in produtos %}
+            <option value="{{ produto.id }}">{{ produto.nome }} — R$ {{ "%.2f"|format(produto.preco) }} (estoque: {{ produto.quantidade_estoque }})</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="quantidade" min="1" value="1" required>
+        <button type="submit">Adicionar</button>
+    </form>
+    {% else %}
+    <p><em>Pedido já enviado para a cozinha — não é possível adicionar novos itens.</em></p>
+    {% endif %}
+</div>
+
+<table>
+    <tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Subtotal</th></tr>
+    {% for item in pedido.itens %}
+    <tr>
+        <td>{{ item.produto.nome }}</td>
+        <td>{{ item.quantidade }}</td>
+        <td>R$ {{ "%.2f"|format(item.preco_unitario) }}</td>
+        <td>R$ {{ "%.2f"|format(item.calcular_subtotal()) }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Total: R$ {{ "%.2f"|format(pedido.valor_total) }}</h3>
+
+{% if pedido.estado == "aberto" and pedido.itens %}
+<form method="POST" action="{{ url_for('pedido.enviar_para_cozinha', numero=pedido.numero) }}">
+    <button type="submit">Enviar para a cozinha</button>
+</form>
+{% endif %}
+{% endblock %}

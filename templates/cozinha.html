@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Painel da Cozinha</h1>
+
+{% for pedido in pedidos %}
+<div class="card">
+    <strong>Pedido #{{ pedido.numero }} — Mesa {{ pedido.mesa_numero }}</strong>
+    <span class="badge {{ pedido.estado }}">{{ pedido.estado }}</span>
+    <ul>
+        {% for item in pedido.itens %}
+        <li>{{ item.quantidade }}x {{ item.produto.nome }}</li>
+        {% endfor %}
+    </ul>
+    {% if pedido.estado == "em_preparo" %}
+    <form method="POST" action="{{ url_for('pedido.marcar_pronto', numero=pedido.numero) }}">
+        <button type="submit">Marcar como pronto</button>
+    </form>
+    {% endif %}
+</div>
+{% else %}
+<p>Nenhum pedido em andamento na cozinha.</p>
+{% endfor %}
+{% endblock %}

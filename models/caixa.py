@@ -1,10 +1,7 @@
-class Caixa:
-    def __init__(self, nome):
-        self.nome = nome
+from extensions import db
 
-    def registrar_pagamento(self, pedido):
-        print(f"Caixa {self.nome} registrou o pagamento de R$ {pedido.valor_total:.2f}")
+class Caixa(db.Model):
+    __tablename__ = "caixa"
 
-    def fechar_conta(self, pedido):
-        pedido.finalizar()
-        print(f"Caixa {self.nome} finalizou o pedido e liberou a mesa {pedido.mesa.numero}")
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(80), nullable=False)

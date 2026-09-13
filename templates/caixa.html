@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Painel do Caixa</h1>
+
+{% for pedido in pedidos %}
+<div class="card">
+    <strong>Pedido #{{ pedido.numero }} — Mesa {{ pedido.mesa_numero }}</strong>
+    <p>Total: R$ {{ "%.2f"|format(pedido.valor_total) }}</p>
+    <form method="POST" action="{{ url_for('pagamento.registrar_pagamento', numero=pedido.numero) }}">
+        <select name="forma_pagamento" required>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao">Cartão</option>
+            <option value="pix">Pix</option>
+        </select>
+        <button type="submit">Registrar pagamento e liberar mesa</button>
+    </form>
+</div>
+{% else %}
+<p>Nenhum pedido pronto para pagamento.</p>
+{% endfor %}
+{% endblock %}

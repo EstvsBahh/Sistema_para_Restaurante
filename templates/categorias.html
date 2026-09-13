@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Categorias</h1>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('categoria.cadastrar_categoria') }}">
+        <input type="text" name="nome" placeholder="Nome da categoria" required>
+        <button type="submit">Cadastrar categoria</button>
+    </form>
+</div>
+
+<table>
+    <tr><th>ID</th><th>Nome</th></tr>
+    {% for categoria in categorias %}
+    <tr><td>{{ categoria.id }}</td><td>{{ categoria.nome }}</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

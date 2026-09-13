@@ -1,0 +1,3 @@
+echo "config.py" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore

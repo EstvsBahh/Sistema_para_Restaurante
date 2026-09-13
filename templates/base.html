@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema para Restaurante</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('home') }}">Início</a>
+        <a href="{{ url_for('mesa.listar_mesas') }}">Mesas</a>
+        <a href="{{ url_for('categoria.listar_categorias') }}">Categorias</a>
+        <a href="{{ url_for('produto.listar_produtos') }}">Produtos</a>
+        <a href="{{ url_for('produto.ver_estoque') }}">Estoque</a>
+        <a href="{{ url_for('garcom.listar_garcons') }}">Garçons</a>
+        <a href="{{ url_for('pedido.form_novo_pedido') }}">Novo Pedido</a>
+        <a href="{{ url_for('pedido.painel_cozinha') }}">Cozinha</a>
+        <a href="{{ url_for('pagamento.painel_caixa') }}">Caixa</a>
+    </nav>
+    <main>
+        {% with mensagens = get_flashed_messages() %}
+            {% if mensagens %}
+                {% for m in mensagens %}
+                    <div class="flash">{{ m }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block conteudo %}{% endblock %}
+    </main>
+</body>
+</html>
