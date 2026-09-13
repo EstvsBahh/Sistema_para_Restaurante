@@ -1,10 +1,10 @@
 import os
 
-USUARIO = os.environ.get("DB_USUARIO", "avnadmin")
-SENHA = os.environ.get("DB_SENHA", "AVNS_BvBkskh9MTJ9PQy8-cY")
-HOST = os.environ.get("DB_HOST", "sistema-restaurante-sistemarestaurante.j.aivencloud.com")
-PORTA = os.environ.get("DB_PORTA", "24632")
-NOME_BANCO = os.environ.get("DB_NOME", "defaultdb")
+USUARIO = os.environ.get("DB_USUARIO", "root")
+SENHA = os.environ.get("DB_SENHA", "")
+HOST = os.environ.get("DB_HOST", "localhost")
+PORTA = os.environ.get("DB_PORTA", "3306")
+NOME_BANCO = os.environ.get("DB_NOME", "sistema_restaurante")
 
 
 class Config:

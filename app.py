@@ -2,13 +2,14 @@ from flask import Flask, render_template
 from config import Config
 from extensions import db
 from routes import registrar_rotas
-import models  # garante que todas as tabelas sejam registradas no SQLAlchemy
-
+import models  
+from dotenv import load_dotenv
+load_dotenv()
 
 def criar_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.secret_key = "chave-secreta-desenvolvimento"  # troque em produção
+    app.secret_key = "chave-secreta-desenvolvimento"  
 
     db.init_app(app)
     registrar_rotas(app)

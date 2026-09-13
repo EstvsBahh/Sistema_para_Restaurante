@@ -1,5 +1,4 @@
-# Cozinha não vira tabela: ela não guarda dados próprios, apenas consulta
-# pedidos com estado="em_preparo"/"pronto" (ver routes/rotas_pedido.py).
+
 from models.mesa import Mesa
 from models.categoria import Categoria
 from models.produto import Produto

@@ -6,7 +6,7 @@ class Pedido(db.Model):
 
     numero = db.Column(db.Integer, primary_key=True)
     data_hora = db.Column(db.DateTime, default=datetime.utcnow)
-    estado = db.Column(db.String(20), default="aberto")  # aberto, em_preparo, pronto, finalizado
+    estado = db.Column(db.String(20), default="aberto") 
     valor_total = db.Column(db.Numeric(10, 2), default=0)
 
     mesa_numero = db.Column(db.Integer, db.ForeignKey("mesa.numero"), nullable=False)
