@@ -6,6 +6,12 @@ Sistema web desenvolvido para auxiliar no gerenciamento de um restaurante, permi
 
 Facilitar o atendimento do restaurante, permitindo registrar pedidos, acompanhar seu andamento, calcular valores e finalizar contas de maneira rápida e confiável.
 
+## Documentação do Projeto
+
+O detalhamento dos requisitos, diagrama de casos de uso e diagrama de classes podem ser consultados no documento oficial:
+
+**[Acessar Documentação em PDF](./docs/Documentacao_SIstema_para_Restaurantes.pdf)**
+
 
 ## Funcionalidades
 
