@@ -1,13 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
-
-
 from extensions import db
 
 
 ZERO = Decimal("0.00")
 FORMA_DINHEIRO = "dinheiro"
-
 
 class Caixa(db.Model):
     __tablename__ = "caixas"

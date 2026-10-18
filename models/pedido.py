@@ -1,7 +1,5 @@
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-
-
 from extensions import db
 from models.item_pedido import ItemPedido
 

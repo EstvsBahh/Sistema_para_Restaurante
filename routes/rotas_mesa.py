@@ -1,5 +1,4 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-
 from extensions import db
 from models.mesa import Mesa
 

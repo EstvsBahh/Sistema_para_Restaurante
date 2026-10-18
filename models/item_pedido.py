@@ -1,6 +1,4 @@
 from decimal import Decimal
-
-
 from extensions import db
 
 
