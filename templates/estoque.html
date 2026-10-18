@@ -1,30 +1,179 @@
 {% extends "base.html" %}
-{% block conteudo %}
-<h1>Controle de Estoque</h1>
+{% block title %}Estoque{% endblock %}
 
-<table>
-    <tr><th>Produto</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Situação</th><th>Repor</th></tr>
-    {% for produto in produtos %}
-    <tr class="{{ 'estoque-baixo' if produto.estoque_baixo() else '' }}">
-        <td>{{ produto.nome }}</td>
-        <td>{{ produto.quantidade_estoque }}</td>
-        <td>{{ produto.estoque_minimo }}</td>
-        <td>
-            {% if produto.quantidade_estoque == 0 %}
-                Sem estoque
-            {% elif produto.estoque_baixo() %}
-                Estoque baixo
-            {% else %}
-                Normal
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Controle de estoque</h1>
+    <p class="page-subtitle">
+      A baixa é automática a cada item lançado em um pedido.
+      Reponha ou ajuste por contagem aqui.
+    </p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="card stat-card">
+      <div class="stat-icon info">
+        <i class="fa-solid fa-boxes-stacked"></i>
+      </div>
+      <div>
+        <div class="stat-label">Produtos</div>
+        <div class="stat-value">{{ resumo.total }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4">
+    <div class="card stat-card">
+      <div class="stat-icon ok">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <div class="stat-label">Com estoque</div>
+        <div class="stat-value">{{ resumo.normal }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4">
+    <div class="card stat-card">
+      <div class="stat-icon danger">
+        <i class="fa-solid fa-ban"></i>
+      </div>
+      <div>
+        <div class="stat-label">Esgotados</div>
+        <div class="stat-value">{{ resumo.esgotado }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="filter-pills mb-4">
+  <a class="pill {{ 'active' if filtro == 'todos' }}"
+     href="{{ url_for('produtos.estoque') }}">Todos</a>
+
+  <a class="pill {{ 'active' if filtro == 'normal' }}"
+     href="{{ url_for('produtos.estoque', filtro='normal') }}">
+    Com estoque
+  </a>
+
+  <a class="pill {{ 'active' if filtro == 'esgotado' }}"
+     href="{{ url_for('produtos.estoque', filtro='esgotado') }}">
+    Esgotados
+  </a>
+</div>
+
+<div class="card">
+  {% if produtos %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th style="min-width:150px">Nível</th>
+          <th class="text-center">Em estoque</th>
+          <th>Situação</th>
+          <th class="text-end">Movimentar</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for produto in produtos %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ produto.nome }}</div>
+            {% if not produto.ativo %}
+            <span class="badge badge-inativo">Fora do cardápio</span>
             {% endif %}
-        </td>
-        <td>
-            <form class="inline" method="POST" action="{{ url_for('produto.entrada_estoque', produto_id=produto.id) }}">
-                <input type="number" name="quantidade" placeholder="Qtd." style="width:70px" required>
-                <button type="submit">Repor</button>
+          </td>
+
+          <td class="text-secondary">{{ produto.categoria.nome }}</td>
+
+          <td>
+            <div class="stock-bar">
+              <span class="{{ produto.situacao_estoque }}"
+                    style="width: {{ produto.estoque_atual / maior_estoque * 100 }}%">
+              </span>
+            </div>
+          </td>
+
+          <td class="text-center fw-bold">{{ produto.estoque_atual }}</td>
+
+          <td>
+            <span class="badge estoque-{{ produto.situacao_estoque }}">
+              {{ 'Esgotado' if produto.esgotado else 'Disponível' }}
+            </span>
+          </td>
+
+          <td class="text-end text-nowrap">
+            <form class="d-inline-flex gap-1" method="post"
+                  action="{{ url_for('produtos.repor', produto_id=produto.id) }}">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <input type="text" inputmode="numeric" data-numero="inteiro"
+                     autocomplete="off" name="quantidade"
+                     placeholder="Qtd." class="form-control form-control-sm"
+                     style="width: 78px" required>
+              <button class="btn btn-sm btn-success" title="Registrar entrada">
+                <i class="fa-solid fa-plus"></i> Repor
+              </button>
             </form>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+
+            <button class="btn btn-sm btn-outline-secondary"
+                    title="Ajustar por contagem"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalAjuste"
+                    data-action="{{ url_for('produtos.ajustar', produto_id=produto.id) }}"
+                    data-campo-quantidade="{{ produto.estoque_atual }}"
+                    data-nome="{{ produto.nome }}">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-box-open"></i>
+    Nenhum produto neste filtro.
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal: ajuste por contagem -->
+<div class="modal fade" id="modalAjuste" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <form class="modal-content" method="post" data-modal-form>
+      <input type="hidden" name="filtro" value="{{ filtro }}">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Ajustar estoque</h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="small text-secondary">
+          Informe a quantidade <strong>real</strong> contada na prateleira.
+          O estoque será substituído por esse valor.
+        </p>
+
+        <label class="form-label">Quantidade contada</label>
+        <input type="text" inputmode="numeric" data-numero="inteiro"
+               autocomplete="off" name="quantidade"
+               class="form-control" required>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light"
+                data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-brand">Ajustar</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
