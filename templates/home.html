@@ -1,8 +1,275 @@
 {% extends "base.html" %}
-{% block conteudo %}
-<h1>Sistema para Restaurante</h1>
-<div class="card">
-    <p>Use o menu acima para navegar: cadastre mesas, categorias, produtos e garçons;
-    abra um novo pedido; acompanhe o painel da cozinha; feche a conta no caixa.</p>
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">
+            Visão geral da operação · atualizado em {{ agora|data_hora }}
+        </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('pedidos.novo') }}" class="btn btn-brand">
+            <i class="fa-solid fa-plus me-1"></i>
+            Novo pedido
+        </a>
+        <a href="{{ url_for('mesas.listar') }}" class="btn btn-outline-secondary bg-white">
+            <i class="fa-solid fa-table-cells-large me-1"></i>
+            Ver mesas
+        </a>
+    </div>
+</div>
+
+<!-- Métricas principais -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon ok">
+                <i class="fa-solid fa-sack-dollar"></i>
+            </div>
+            <div>
+                <div class="stat-label">Faturamento de hoje</div>
+                <div class="stat-value">{{ faturamento_hoje|brl }}</div>
+                <div class="stat-hint">
+                    {{ vendas_hoje }} pedido{{ '' if vendas_hoje == 1 else 's' }}
+                    pago{{ '' if vendas_hoje == 1 else 's' }} ·
+                    ticket médio {{ ticket_medio|brl }} · inclui taxa de serviço
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon brand">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div>
+                <div class="stat-label">Pedidos em andamento</div>
+                <div class="stat-value">{{ pedidos_ativos }}</div>
+                <div class="stat-hint">
+                    Aguardando preparo, entrega ou pagamento
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon info">
+                <i class="fa-solid fa-chair"></i>
+            </div>
+            <div>
+                <div class="stat-label">Mesas ocupadas</div>
+                <div class="stat-value">
+                    {{ mesas.ocupada }}
+                    <span class="fs-6 text-secondary fw-medium">
+                        / {{ mesas.total }}
+                    </span>
+                </div>
+                <div class="stat-hint">
+                    {{ mesas.livre }} livre{{ '' if mesas.livre == 1 else 's' }} ·
+                    {{ mesas.reservada }} reservada{{ '' if mesas.reservada == 1 else 's' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon warn">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            <div>
+                <div class="stat-label">Taxa de serviço (hoje)</div>
+                <div class="stat-value">{{ taxas_hoje|brl }}</div>
+                <div class="stat-hint">10% opcional, cobrada no caixa</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna esquerda -->
+    <div class="col-12 col-xl-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fa-solid fa-clock-rotate-left me-2 text-secondary"></i>
+                    Pedidos recentes
+                </span>
+            </div>
+
+            {% if pedidos_recentes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>Mesa</th>
+                            <th>Garçom</th>
+                            <th>Itens</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Hora</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for pedido in pedidos_recentes %}
+                        <tr>
+                            <td>
+                                <a class="link-row fw-semibold"
+                                   href="{{ url_for('pedidos.ver', pedido_id=pedido.id) }}">
+                                    #{{ pedido.id }}
+                                </a>
+                            </td>
+                            <td>Mesa {{ pedido.mesa.numero }}</td>
+                            <td>{{ pedido.garcom.nome }}</td>
+                            <td>{{ pedido.quantidade_itens }}</td>
+                            <td class="fw-semibold">{{ pedido.total|brl }}</td>
+                            <td>
+                                <span class="badge status-{{ pedido.status }}">
+                                    {{ pedido.status_label }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">
+                                {{ pedido.criado_em|hora }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-receipt"></i>
+                Nenhum pedido ainda. Abra o primeiro em “Novo pedido”.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-table-cells-large me-2 text-secondary"></i>
+                Ocupação do salão
+            </div>
+
+            <div class="card-body">
+                {% if mesas.total %}
+                <div class="mesa-split mb-3">
+                    <div class="livre"
+                         style="width: {{ mesas.livre / mesas.total * 100 }}%">
+                    </div>
+                    <div class="ocupada"
+                         style="width: {{ mesas.ocupada / mesas.total * 100 }}%">
+                    </div>
+                    <div class="reservada"
+                         style="width: {{ mesas.reservada / mesas.total * 100 }}%">
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-4 small">
+                    <span>
+                        <span class="legend-dot" style="background: var(--ok)"></span>
+                        {{ mesas.livre }} livres
+                    </span>
+                    <span>
+                        <span class="legend-dot" style="background: var(--danger)"></span>
+                        {{ mesas.ocupada }} ocupadas
+                    </span>
+                    <span>
+                        <span class="legend-dot" style="background: var(--warn)"></span>
+                        {{ mesas.reservada }} reservadas
+                    </span>
+                </div>
+
+                {% else %}
+                <div class="empty-state py-3">
+                    <i class="fa-solid fa-chair"></i>
+                    Cadastre as mesas do salão para acompanhar a ocupação.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna direita -->
+    <div class="col-12 col-xl-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fa-solid fa-cash-register me-2 text-secondary"></i>
+                Caixa
+            </div>
+
+            <div class="card-body">
+                {% if caixa_atual %}
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge status-pronto">Aberto</span>
+                    <span class="small text-secondary">
+                        desde {{ caixa_atual.aberto_em|hora }}
+                    </span>
+                </div>
+
+                <div class="small text-secondary">
+                    Responsável:
+                    <strong class="text-dark">{{ caixa_atual.responsavel }}</strong>
+                </div>
+
+                <div class="small text-secondary mb-3">
+                    Recebido na sessão:
+                    <strong class="text-dark">{{ caixa_atual.total_recebido|brl }}</strong>
+                </div>
+
+                <a href="{{ url_for('pagamentos.caixa') }}"
+                   class="btn btn-outline-secondary btn-sm w-100">
+                    Ir para o caixa
+                </a>
+
+                {% else %}
+                <p class="text-secondary small mb-3">
+                    O caixa está fechado. Abra-o para começar a receber pagamentos.
+                </p>
+
+                <a href="{{ url_for('pagamentos.caixa') }}"
+                   class="btn btn-brand btn-sm w-100">
+                    Abrir caixa
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-ranking-star me-2 text-secondary"></i>
+                Mais vendidos
+            </div>
+
+            <div class="card-body">
+                {% for nome, total in top_produtos %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="fw-medium">{{ nome }}</span>
+                        <span class="text-secondary">{{ total|int }} un.</span>
+                    </div>
+
+                    <div class="rank-bar">
+                        <span style="width: {{ (total / top_maximo * 100) if top_maximo else 0 }}%"></span>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="empty-state py-3">
+                    <i class="fa-solid fa-ranking-star"></i>
+                    As vendas aparecerão aqui.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

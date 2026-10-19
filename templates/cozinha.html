@@ -1,23 +1,176 @@
 {% extends "base.html" %}
-{% block conteudo %}
-<h1>Painel da Cozinha</h1>
 
-{% for pedido in pedidos %}
-<div class="card">
-    <strong>Pedido #{{ pedido.numero }} — Mesa {{ pedido.mesa_numero }}</strong>
-    <span class="badge {{ pedido.estado }}">{{ pedido.estado }}</span>
-    <ul>
-        {% for item in pedido.itens %}
-        <li>{{ item.quantidade }}x {{ item.produto.nome }}</li>
+{% block title %}Cozinha{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Painel da cozinha</h1>
+        <p class="page-subtitle">
+            <span class="live-dot me-2"></span>
+            Atualização automática a cada 15 segundos
+        </p>
+    </div>
+
+    <div class="d-flex gap-3 text-secondary small">
+        <span>
+            <strong class="text-dark fs-5">{{ em_preparo|length }}</strong>
+            em preparo
+        </span>
+        <span>
+            <strong class="text-dark fs-5">{{ prontos|length }}</strong>
+            prontos
+        </span>
+    </div>
+</div>
+
+<div id="kds-board">
+    <div class="kds-column-title">
+        <i class="fa-solid fa-fire-burner text-warning"></i>
+        Em preparo
+    </div>
+
+    {% if em_preparo %}
+    <div class="kds-grid mb-5">
+        {% for pedido in em_preparo %}
+        <div class="card ticket {{ pedido.urgencia }}">
+            <div class="ticket-head">
+                <div>
+                    <div class="ticket-mesa">
+                        Mesa {{ pedido.mesa.numero }}
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Pedido #{{ pedido.id }} · {{ pedido.garcom.nome }}
+                    </div>
+                </div>
+
+                <span class="ticket-tempo">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    {{ pedido.minutos_decorridos }} min
+                </span>
+            </div>
+
+            <ul class="ticket-itens">
+                {% for item in pedido.itens %}
+                <li>
+                    <span class="ticket-qtd">{{ item.quantidade }}x</span>
+                    <span>
+                        {{ item.produto.nome }}
+                        {% if item.observacao %}
+                        <span class="ticket-obs">
+                            <i class="fa-solid fa-comment-dots me-1"></i>
+                            {{ item.observacao }}
+                        </span>
+                        {% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if pedido.observacao %}
+            <div class="px-3 pb-2 small text-danger fw-medium">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                {{ pedido.observacao }}
+            </div>
+            {% endif %}
+
+            <div class="ticket-foot">
+                <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
+                    <input type="hidden" name="voltar_para" value="cozinha">
+                    <button class="btn btn-success w-100">
+                        <i class="fa-solid fa-check me-1"></i>
+                        Marcar como pronto
+                    </button>
+                </form>
+            </div>
+        </div>
         {% endfor %}
-    </ul>
-    {% if pedido.estado == "em_preparo" %}
-    <form method="POST" action="{{ url_for('pedido.marcar_pronto', numero=pedido.numero) }}">
-        <button type="submit">Marcar como pronto</button>
-    </form>
+    </div>
+    {% else %}
+    <div class="kds-empty mb-5">
+        <i class="fa-solid fa-mug-hot fs-2 d-block mb-2 opacity-50"></i>
+        Nenhum pedido em preparo. Tudo em dia!
+    </div>
+    {% endif %}
+
+    <div class="kds-column-title">
+        <i class="fa-solid fa-bell-concierge text-info"></i>
+        Prontos para entrega
+    </div>
+
+    {% if prontos %}
+    <div class="kds-grid">
+        {% for pedido in prontos %}
+        <div class="card ticket pronto">
+            <div class="ticket-head">
+                <div>
+                    <div class="ticket-mesa">
+                        Mesa {{ pedido.mesa.numero }}
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Pedido #{{ pedido.id }} · {{ pedido.garcom.nome }}
+                    </div>
+                </div>
+
+                <span class="badge status-pronto">Pronto</span>
+            </div>
+
+            <ul class="ticket-itens">
+                {% for item in pedido.itens %}
+                <li>
+                    <span class="ticket-qtd">{{ item.quantidade }}x</span>
+                    <span>{{ item.produto.nome }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="ticket-foot">
+                <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
+                    <input type="hidden" name="voltar_para" value="cozinha">
+                    <button class="btn btn-outline-primary w-100">
+                        <i class="fa-solid fa-bell-concierge me-1"></i>
+                        Entregue na mesa
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="kds-empty">
+        <i class="fa-solid fa-bell-concierge fs-2 d-block mb-2 opacity-50"></i>
+        Nenhum pedido aguardando entrega.
+    </div>
     {% endif %}
 </div>
-{% else %}
-<p>Nenhum pedido em andamento na cozinha.</p>
-{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Atualiza o painel sem recarregar a página inteira (não interrompe cliques em andamento)
+    setInterval(function () {
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'fetch'
+            }
+        })
+        .then(function (resposta) {
+            return resposta.text();
+        })
+        .then(function (html) {
+            var novo = new DOMParser()
+                .parseFromString(html, 'text/html')
+                .getElementById('kds-board');
+
+            var atual = document.getElementById('kds-board');
+
+            if (novo && atual) {
+                atual.innerHTML = novo.innerHTML;
+            }
+        })
+        .catch(function () {
+            /* sem conexão: tenta de novo no próximo ciclo */
+        });
+    }, 15000);
+</script>
 {% endblock %}
