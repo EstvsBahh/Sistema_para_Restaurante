@@ -1,192 +1,311 @@
 {% extends "base.html" %}
+
 {% block title %}Pedido #{{ pedido.id }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-   <div>
-     <h1 class="page-title">Pedido #{{ pedido.id }} <span class="badge status-{{ pedido.status }} fs-6 align-middle ms-2">{{ pedido.status_label }}</span></h1>
-     <p class="page-subtitle">
-       <i class="fa-solid fa-chair me-1"></i>Mesa {{ pedido.mesa.numero }} ·
-       <i class="fa-solid fa-user-tie ms-1 me-1"></i>{{ pedido.garcom.nome }} ·
-       <i class="fa-regular fa-clock ms-1 me-1"></i>aberto em {{ pedido.criado_em|data_hora }}
-     </p>
-   </div>
-   <a href="{{ url_for('mesas.listar') }}" class="btn btn-outline-secondary bg-white"><i class="fa-solid fa-arrow-left me-1"></i> Mesas</a>
+    <div>
+        <h1 class="page-title">
+            Pedido #{{ pedido.id }}
+            <span class="badge status-{{ pedido.status }} fs-6 align-middle ms-2">
+                {{ pedido.status_label }}
+            </span>
+        </h1>
+
+        <p class="page-subtitle">
+            <i class="fa-solid fa-chair me-1"></i>Mesa {{ pedido.mesa.numero }}
+            · <i class="fa-solid fa-user-tie ms-1 me-1"></i>{{ pedido.garcom.nome }}
+            · <i class="fa-regular fa-clock ms-1 me-1"></i>aberto em {{ pedido.criado_em|data_hora }}
+        </p>
+    </div>
+
+    <a href="{{ url_for('mesas.listar') }}" class="btn btn-outline-secondary bg-white">
+        <i class="fa-solid fa-arrow-left me-1"></i> Mesas
+    </a>
 </div>
 
 <!-- Etapas do pedido -->
 <div class="card mb-4">
-   <div class="card-body">
-     <div class="stepper {{ 'cancelado' if pedido.status == 'cancelado' }}">
-        {% for etapa in fluxo %}
-        {% set indice = loop.index0 %}
-        <div class="step {{ 'done' if indice < pedido.etapa_atual or (pedido.status == 'pago' and indice == pedido.etapa_atual) else ('current' if indice == pedido.etapa_atual) }}">
-          <div class="dot">{% if indice < pedido.etapa_atual or (pedido.status == 'pago' and indice == pedido.etapa_atual) %}<i class="fa-solid fa-check"></i>{% else %}{{ loop.index }}{% endif %}</div>
-          {{ status_labels[etapa] }}
+    <div class="card-body">
+        <div class="stepper {{ 'cancelado' if pedido.status == 'cancelado' }}">
+            {% for etapa in fluxo %}
+                {% set indice = loop.index0 %}
+
+                <div class="step {{ 'done' if indice < pedido.etapa_atual or (pedido.status == 'pago' and indice == pedido.etapa_atual) else ('current' if indice == pedido.etapa_atual) }}">
+                    <div class="dot">
+                        {% if indice < pedido.etapa_atual or (pedido.status == 'pago' and indice == pedido.etapa_atual) %}
+                            <i class="fa-solid fa-check"></i>
+                        {% else %}
+                            {{ loop.index }}
+                        {% endif %}
+                    </div>
+
+                    {{ status_labels[etapa] }}
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-     </div>
-     {% if pedido.status == 'cancelado' %}<div class="text-center text-danger fw-semibold mt-3"><i class="fa-solid fa-ban me-1"></i>Pedido cancelado</div>{% endif %}
-   </div>
+
+        {% if pedido.status == 'cancelado' %}
+            <div class="text-center text-danger fw-semibold mt-3">
+                <i class="fa-solid fa-ban me-1"></i>Pedido cancelado
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 <div class="row g-4">
-  <div class="col-12 col-lg-8">
-     {% if pedido.aceita_itens %}
-     <div class="card mb-4">
-       <div class="card-header"><i class="fa-solid fa-circle-plus me-2 text-secondary"></i>Adicionar item</div>
-       <div class="card-body">
-          <form method="post" action="{{ url_for('pedidos.adicionar_item', pedido_id=pedido.id) }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-5">
-              <label class="form-label">Produto</label>
-              <select name="produto_id" class="form-select" required>
-                 <option value="" disabled selected>Selecione</option>
-                 {% for produto in produtos %}
-                 <option value="{{ produto.id }}">{{ produto.nome }} — {{ produto.preco|brl }} ({{ produto.estoque_atual }} em estoque)</option>
-                 {% endfor %}
-              </select>
-            </div>
-            <div class="col-4 col-md-2">
-              <label class="form-label">Qtd.</label>
-              <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="quantidade" value="1" class="form-control" required>
-            </div>
-            <div class="col-8 col-md-3">
-              <label class="form-label">Observação</label>
-              <input type="text" name="observacao" maxlength="200" class="form-control" placeholder="Opcional">
-            </div>
-            <div class="col-12 col-md-2">
-              <button class="btn btn-brand w-100"><i class="fa-solid fa-plus me-1"></i> Incluir</button>
-            </div>
-          </form>
-       </div>
-     </div>
-     {% endif %}
+    <div class="col-12 col-lg-8">
+        {% if pedido.aceita_itens %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fa-solid fa-circle-plus me-2 text-secondary"></i>Adicionar item
+                </div>
 
-     <div class="card">
-        <div class="card-header"><i class="fa-solid fa-list me-2 text-secondary"></i>Itens do pedido</div>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th class="text-center">Qtd.</th>
-                <th class="text-end">Unitário</th>
-                <th class="text-end">Subtotal</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-               {% for item in pedido.itens %}
-               <tr>
-                 <td>
-                    <div class="fw-semibold">{{ item.produto.nome }}</div>
-                    {% if item.observacao %}<div class="small text-danger"><i class="fa-solid fa-comment-dots me-1"></i>{{ item.observacao }}</div>{% endif %}
-                 </td>
-                 <td class="text-center">{{ item.quantidade }}</td>
-                 <td class="text-end text-secondary">{{ item.preco_unitario|brl }}</td>
-                 <td class="text-end fw-semibold">{{ item.subtotal|brl }}</td>
-                 <td class="text-end">
-                   {% if pedido.editavel %}
-                   <form method="post" action="{{ url_for('pedidos.remover_item', pedido_id=pedido.id, item_id=item.id) }}" data-confirm="Remover {{ item.produto.nome }} do pedido?">
-                      <button class="btn btn-sm btn-outline-danger" title="Remover item"><i class="fa-solid fa-xmark"></i></button>
-                   </form>
-                   {% endif %}
-                 </td>
-              </tr>
-              {% else %}
-              <tr><td colspan="5" class="text-center text-secondary py-4">Nenhum item neste pedido.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-       </div>
-     </div>
-   </div>
+                <div class="card-body">
+                    <form
+                        method="post"
+                        action="{{ url_for('pedidos.adicionar_item', pedido_id=pedido.id) }}"
+                        class="row g-2 align-items-end"
+                    >
+                        <div class="col-12 col-md-5">
+                            <label class="form-label">Produto</label>
+                            <select name="produto_id" class="form-select" required>
+                                <option value="" disabled selected>Selecione</option>
 
-   <div class="col-12 col-lg-4">
-     <div class="card mb-4">
-       <div class="card-body">
-          <div class="small text-secondary">Total do pedido</div>
-          <div class="cart-total mb-1">{{ pedido.total|brl }}</div>
-          <div class="small text-secondary mb-3">{{ pedido.quantidade_itens }} item(ns)</div>
-          {% if pedido.ativo %}
-          <div class="mesa-pedido small mb-3">
-            <div class="d-flex justify-content-between">
-              <span class="text-secondary">Taxa de serviço ({{ taxa_percentual }}%) · opcional</span>
-              <strong>{{ pedido.taxa_servico_sugerida|brl }}</strong>
+                                {% for produto in produtos %}
+                                    <option value="{{ produto.id }}">
+                                        {{ produto.nome }} — {{ produto.preco|brl }}
+                                        ({{ produto.estoque_atual }} em estoque)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-4 col-md-2">
+                            <label class="form-label">Qtd.</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                data-numero="inteiro"
+                                autocomplete="off"
+                                name="quantidade"
+                                value="1"
+                                class="form-control"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-8 col-md-3">
+                            <label class="form-label">Observação</label>
+                            <input
+                                type="text"
+                                name="observacao"
+                                maxlength="200"
+                                class="form-control"
+                                placeholder="Opcional"
+                            >
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <button class="btn btn-brand w-100">
+                                <i class="fa-solid fa-plus me-1"></i> Incluir
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="d-flex justify-content-between mt-1">
-              <span class="text-secondary">Total com taxa</span>
-              <strong>{{ pedido.total_com_taxa|brl }}</strong>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-list me-2 text-secondary"></i>Itens do pedido
             </div>
-          </div>
-          {% endif %}
-          {% if pedido.observacao %}
-          <div class="mesa-pedido mb-3"><strong>Observação:</strong> {{ pedido.observacao }}</div>
-          {% endif %}
 
-        <div class="d-grid gap-2">
-          {% if pedido.status == 'aberto' %}
-           <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
-              <button class="btn btn-brand w-100" {{ 'disabled' if not pedido.itens }}><i class="fa-solid fa-paper-plane me-1"></i> Enviar para a cozinha</button>
-           </form>
-           {% elif pedido.status == 'em_preparo' %}
-           <div class="alert alert-warning py-2 small mb-0"><i class="fa-solid fa-fire-burner me-1"></i>A cozinha está preparando este pedido.</div>
-           {% elif pedido.status == 'pronto' %}
-           <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
-              <button class="btn btn-success w-100"><i class="fa-solid fa-bell-concierge me-1"></i> Marcar como entregue</button>
-           </form>
-           {% endif %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th class="text-center">Qtd.</th>
+                            <th class="text-end">Unitário</th>
+                            <th class="text-end">Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
 
-           {% if pedido.status in ('pronto', 'entregue') %}
-           <a href="{{ url_for('pagamentos.caixa', pagar=pedido.id) }}" class="btn btn-dark"><i class="fa-solid fa-cash-register me-1"></i> Receber pagamento</a>
-           {% endif %}
+                    <tbody>
+                        {% for item in pedido.itens %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ item.produto.nome }}</div>
 
-            {% if pedido.ativo %}
-            <form method="post" action="{{ url_for('pedidos.cancelar', pedido_id=pedido.id) }}" data-confirm="Cancelar o pedido #{{ pedido.id }}? Os itens voltam ao estoque e a mesa é liberada.">
-              <button class="btn btn-outline-danger w-100"><i class="fa-solid fa-ban me-1"></i> Cancelar pedido</button>
-            </form>
-            {% endif %}
-         </div>
-       </div>
-     </div>
+                                    {% if item.observacao %}
+                                        <div class="small text-danger">
+                                            <i class="fa-solid fa-comment-dots me-1"></i>
+                                            {{ item.observacao }}
+                                        </div>
+                                    {% endif %}
+                                </td>
 
-     {% if pedido.pagamento %}
-     <div class="card">
-       <div class="card-header"><i class="fa-solid fa-receipt me-2 text-secondary"></i>Pagamento</div>
-       <div class="card-body small">
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Forma</span>
-            <strong>{{ pedido.pagamento.forma_label }}</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Subtotal (itens)</span>
-            <strong>{{ pedido.pagamento.subtotal|brl }}</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Taxa de serviço</span>
-            <strong>{{ pedido.pagamento.taxa_servico|brl if pedido.pagamento.taxa_cobrada else 'Não cobrada' }}</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Total pago</span>
-            <strong>{{ pedido.pagamento.valor|brl }}</strong>
-          </div>
-          {% if pedido.pagamento.forma == 'dinheiro' %}
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Recebido</span>
-            <strong>{{ pedido.pagamento.valor_recebido|brl }}</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-1">
-            <span class="text-secondary">Troco</span>
-            <strong>{{ pedido.pagamento.troco|brl }}</strong>
-          </div>
-          {% endif %}
-          <div class="d-flex justify-content-between">
-            <span class="text-secondary">Data</span>
-            <strong>{{ pedido.pagamento.criado_em|data_hora }}</strong>
-          </div>
-       </div>
-     </div>
-     {% endif %}
-   </div>
+                                <td class="text-center">{{ item.quantidade }}</td>
+                                <td class="text-end text-secondary">{{ item.preco_unitario|brl }}</td>
+                                <td class="text-end fw-semibold">{{ item.subtotal|brl }}</td>
+
+                                <td class="text-end">
+                                    {% if pedido.editavel %}
+                                        <form
+                                            method="post"
+                                            action="{{ url_for('pedidos.remover_item', pedido_id=pedido.id, item_id=item.id) }}"
+                                            data-confirm="Remover {{ item.produto.nome }} do pedido?"
+                                        >
+                                            <button
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Remover item"
+                                            >
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">
+                                    Nenhum item neste pedido.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="small text-secondary">Total do pedido</div>
+                <div class="cart-total mb-1">{{ pedido.total|brl }}</div>
+                <div class="small text-secondary mb-3">
+                    {{ pedido.quantidade_itens }} item(ns)
+                </div>
+
+                {% if pedido.ativo %}
+                    <div class="mesa-pedido small mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-secondary">
+                                Taxa de serviço ({{ taxa_percentual }}%) · opcional
+                            </span>
+                            <strong>{{ pedido.taxa_servico_sugerida|brl }}</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="text-secondary">Total com taxa</span>
+                            <strong>{{ pedido.total_com_taxa|brl }}</strong>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if pedido.observacao %}
+                    <div class="mesa-pedido mb-3">
+                        <strong>Observação:</strong> {{ pedido.observacao }}
+                    </div>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    {% if pedido.status == 'aberto' %}
+                        <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
+                            <button class="btn btn-brand w-100" {{ 'disabled' if not pedido.itens }}>
+                                <i class="fa-solid fa-paper-plane me-1"></i> Enviar para a cozinha
+                            </button>
+                        </form>
+
+                    {% elif pedido.status == 'em_preparo' %}
+                        <div class="alert alert-warning py-2 small mb-0">
+                            <i class="fa-solid fa-fire-burner me-1"></i>
+                            A cozinha está preparando este pedido.
+                        </div>
+
+                    {% elif pedido.status == 'pronto' %}
+                        <form method="post" action="{{ url_for('pedidos.avancar', pedido_id=pedido.id) }}">
+                            <button class="btn btn-success w-100">
+                                <i class="fa-solid fa-bell-concierge me-1"></i> Marcar como entregue
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if pedido.status in ('pronto', 'entregue') %}
+                        <a
+                            href="{{ url_for('pagamentos.caixa', pagar=pedido.id) }}"
+                            class="btn btn-dark"
+                        >
+                            <i class="fa-solid fa-cash-register me-1"></i> Receber pagamento
+                        </a>
+                    {% endif %}
+
+                    {% if pedido.ativo %}
+                        <form
+                            method="post"
+                            action="{{ url_for('pedidos.cancelar', pedido_id=pedido.id) }}"
+                            data-confirm="Cancelar o pedido #{{ pedido.id }}? Os itens voltam ao estoque e a mesa é liberada."
+                        >
+                            <button class="btn btn-outline-danger w-100">
+                                <i class="fa-solid fa-ban me-1"></i> Cancelar pedido
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if pedido.pagamento %}
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-receipt me-2 text-secondary"></i>Pagamento
+                </div>
+
+                <div class="card-body small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary">Forma</span>
+                        <strong>{{ pedido.pagamento.forma_label }}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary">Subtotal (itens)</span>
+                        <strong>{{ pedido.pagamento.subtotal|brl }}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary">Taxa de serviço</span>
+                        <strong>
+                            {{ pedido.pagamento.taxa_servico|brl if pedido.pagamento.taxa_cobrada else 'Não cobrada' }}
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary">Total pago</span>
+                        <strong>{{ pedido.pagamento.valor|brl }}</strong>
+                    </div>
+
+                    {% if pedido.pagamento.forma == 'dinheiro' %}
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-secondary">Recebido</span>
+                            <strong>{{ pedido.pagamento.valor_recebido|brl }}</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-secondary">Troco</span>
+                            <strong>{{ pedido.pagamento.troco|brl }}</strong>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Data</span>
+                        <strong>{{ pedido.pagamento.criado_em|data_hora }}</strong>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

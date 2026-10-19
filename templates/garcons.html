@@ -1,157 +1,189 @@
 {% extends "base.html" %}
+
 {% block title %}Garçons{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <div>
-    <h1 class="page-title">Garçons</h1>
-    <p class="page-subtitle">Equipe de atendimento do salão.</p>
-  </div>
+    <div>
+        <h1 class="page-title">Garçons</h1>
+        <p class="page-subtitle">Equipe de atendimento do salão.</p>
+    </div>
 
-  <button class="btn btn-brand" data-bs-toggle="modal"
-          data-bs-target="#modalNovoGarcom">
-    <i class="fa-solid fa-plus me-1"></i> Novo garçom
-  </button>
+    <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovoGarcom">
+        <i class="fa-solid fa-plus me-1"></i>
+        Novo garçom
+    </button>
 </div>
 
 <div class="card">
-  {% if garcons %}
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Garçom</th>
-          <th>Telefone</th>
-          <th class="text-center">Pedidos em andamento</th>
-          <th>Situação</th>
-          <th class="text-end">Ações</th>
-        </tr>
-      </thead>
+    {% if garcons %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Garçom</th>
+                    <th>Telefone</th>
+                    <th class="text-center">Pedidos em andamento</th>
+                    <th>Situação</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
 
-      <tbody>
-        {% for garcom in garcons %}
-        <tr>
-          <td>
-            <div class="d-flex align-items-center gap-3">
-              <span class="avatar">{{ garcom.iniciais }}</span>
-              <span class="fw-semibold">{{ garcom.nome }}</span>
-            </div>
-          </td>
+            <tbody>
+                {% for garcom in garcons %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="avatar">{{ garcom.iniciais }}</span>
+                            <span class="fw-semibold">{{ garcom.nome }}</span>
+                        </div>
+                    </td>
 
-          <td class="text-secondary">{{ garcom.telefone or '—' }}</td>
-          <td class="text-center">{{ garcom.pedidos_ativos }}</td>
+                    <td class="text-secondary">
+                        {{ garcom.telefone or '—' }}
+                    </td>
 
-          <td>
-            <span class="badge {{ 'badge-ativo' if garcom.ativo else 'badge-inativo' }}">
-              {{ 'Ativo' if garcom.ativo else 'Inativo' }}
-            </span>
-          </td>
+                    <td class="text-center">
+                        {{ garcom.pedidos_ativos }}
+                    </td>
 
-          <td class="text-end text-nowrap">
-            <button class="btn btn-sm btn-outline-secondary"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEditarGarcom"
-                    data-action="{{ url_for('garcons.editar', garcom_id=garcom.id) }}"
-                    data-campo-nome="{{ garcom.nome }}"
-                    data-campo-telefone="{{ garcom.telefone or '' }}"
-                    title="Editar">
-              <i class="fa-solid fa-pen"></i>
-            </button>
+                    <td>
+                        <span class="badge {{ 'badge-ativo' if garcom.ativo else 'badge-inativo' }}">
+                            {{ 'Ativo' if garcom.ativo else 'Inativo' }}
+                        </span>
+                    </td>
 
-            <form class="d-inline" method="post"
-                  action="{{ url_for('garcons.alternar', garcom_id=garcom.id) }}">
-              <button class="btn btn-sm btn-outline-secondary"
-                      title="{{ 'Desativar' if garcom.ativo else 'Reativar' }}">
-                <i class="fa-solid {{ 'fa-user-slash' if garcom.ativo else 'fa-user-check' }}"></i>
-              </button>
-            </form>
+                    <td class="text-end text-nowrap">
+                        <button
+                            class="btn btn-sm btn-outline-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalEditarGarcom"
+                            data-action="{{ url_for('garcons.editar', garcom_id=garcom.id) }}"
+                            data-campo-nome="{{ garcom.nome }}"
+                            data-campo-telefone="{{ garcom.telefone or '' }}"
+                            title="Editar">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
 
-            <form class="d-inline" method="post"
-                  action="{{ url_for('garcons.excluir', garcom_id=garcom.id) }}"
-                  data-confirm="Excluir {{ garcom.nome }}?">
-              <button class="btn btn-sm btn-outline-danger" title="Excluir">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="empty-state">
-    <i class="fa-solid fa-user-tie"></i>
-    Nenhum garçom cadastrado ainda.
-  </div>
-  {% endif %}
+                        <form
+                            class="d-inline"
+                            method="post"
+                            action="{{ url_for('garcons.alternar', garcom_id=garcom.id) }}">
+                            <button
+                                class="btn btn-sm btn-outline-secondary"
+                                title="{{ 'Desativar' if garcom.ativo else 'Reativar' }}">
+                                <i class="fa-solid {{ 'fa-user-slash' if garcom.ativo else 'fa-user-check' }}"></i>
+                            </button>
+                        </form>
+
+                        <form
+                            class="d-inline"
+                            method="post"
+                            action="{{ url_for('garcons.excluir', garcom_id=garcom.id) }}"
+                            data-confirm="Excluir {{ garcom.nome }}?">
+                            <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fa-solid fa-user-tie"></i>
+        Nenhum garçom cadastrado ainda.
+    </div>
+    {% endif %}
 </div>
 
+<!-- Modal: novo garçom -->
 <div class="modal fade" id="modalNovoGarcom" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content" method="post"
-          action="{{ url_for('garcons.criar') }}">
-      <div class="modal-header">
-        <h5 class="modal-title">Novo garçom</h5>
-        <button type="button" class="btn-close"
-                data-bs-dismiss="modal"></button>
-      </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="{{ url_for('garcons.criar') }}">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo garçom</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label">Nome completo</label>
-          <input type="text" name="nome" maxlength="100"
-                 class="form-control" required>
-        </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nome completo</label>
+                    <input
+                        type="text"
+                        name="nome"
+                        maxlength="100"
+                        class="form-control"
+                        required>
+                </div>
 
-        <div>
-          <label class="form-label">
-            Telefone
-            <span class="text-secondary fw-normal">(opcional)</span>
-          </label>
-          <input type="text" inputmode="tel" data-numero="telefone"
-                 name="telefone" maxlength="30" class="form-control">
-        </div>
-      </div>
+                <div>
+                    <label class="form-label">
+                        Telefone
+                        <span class="text-secondary fw-normal">(opcional)</span>
+                    </label>
+                    <input
+                        type="text"
+                        inputmode="tel"
+                        data-numero="telefone"
+                        name="telefone"
+                        maxlength="30"
+                        class="form-control">
+                </div>
+            </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light"
-                data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-brand">Cadastrar</button>
-      </div>
-    </form>
-  </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button class="btn btn-brand">Cadastrar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
+<!-- Modal: editar garçom -->
 <div class="modal fade" id="modalEditarGarcom" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content" method="post" data-modal-form>
-      <div class="modal-header">
-        <h5 class="modal-title">Editar garçom</h5>
-        <button type="button" class="btn-close"
-                data-bs-dismiss="modal"></button>
-      </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" data-modal-form>
+            <div class="modal-header">
+                <h5 class="modal-title">Editar garçom</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label">Nome completo</label>
-          <input type="text" name="nome" maxlength="100"
-                 class="form-control" required>
-        </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nome completo</label>
+                    <input
+                        type="text"
+                        name="nome"
+                        maxlength="100"
+                        class="form-control"
+                        required>
+                </div>
 
-        <div>
-          <label class="form-label">Telefone</label>
-          <input type="text" inputmode="tel" data-numero="telefone"
-                 name="telefone" maxlength="30" class="form-control">
-        </div>
-      </div>
+                <div>
+                    <label class="form-label">Telefone</label>
+                    <input
+                        type="text"
+                        inputmode="tel"
+                        data-numero="telefone"
+                        name="telefone"
+                        maxlength="30"
+                        class="form-control">
+                </div>
+            </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light"
-                data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-brand">Salvar</button>
-      </div>
-    </form>
-  </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button class="btn btn-brand">Salvar</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

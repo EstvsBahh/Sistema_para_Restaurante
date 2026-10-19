@@ -1,150 +1,156 @@
 {% extends "base.html" %}
+
 {% block title %}Mesas{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <div>
-     <h1 class="page-title">Mesas</h1>
-     <p class="page-subtitle">Acompanhe o salão em tempo real e abra pedidos com um clique.</p>
-  </div>
-  <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovaMesa"><i class="fa-solid fa-plus me-1"></i> Nova mesa</button>
+    <div>
+        <h1 class="page-title">Mesas</h1>
+        <p class="page-subtitle">
+            Acompanhe o salão em tempo real e abra pedidos com um clique.
+        </p>
+    </div>
+
+    <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovaMesa">
+        <i class="fa-solid fa-plus me-1"></i>
+        Nova mesa
+    </button>
 </div>
 
 <div class="filter-pills mb-4">
-   <a class="pill {{ 'active' if filtro == 'todas' }}" href="{{ url_for('mesas.listar') }}">Todas <span class="count">{{ contagem.todas }}</span></a>
-   <a class="pill {{ 'active' if filtro == 'livre' }}" href="{{ url_for('mesas.listar', status='livre') }}"><span class="legend-dot" style="background: var(--ok); margin:0"></span> Livres <span class="count">{{ contagem.livre }}</span></a>
-   <a class="pill {{ 'active' if filtro == 'ocupada' }}" href="{{ url_for('mesas.listar', status='ocupada') }}"><span class="legend-dot" style="background: var(--danger); margin:0"></span> Ocupadas <span class="count">{{ contagem.ocupada }}</span></a>
-   <a class="pill {{ 'active' if filtro == 'reservada' }}" href="{{ url_for('mesas.listar', status='reservada') }}"><span class="legend-dot" style="background: var(--warn); margin:0"></span> Reservadas <span class="count">{{ contagem.reservada }}</span></a>
+    <a class="pill {{ 'active' if filtro == 'todas' }}"
+       href="{{ url_for('mesas.listar') }}">
+        Todas <span class="count">{{ contagem.todas }}</span>
+    </a>
+
+    <a class="pill {{ 'active' if filtro == 'livre' }}"
+       href="{{ url_for('mesas.listar', status='livre') }}">
+        <span class="legend-dot" style="background: var(--ok); margin: 0"></span>
+        Livres <span class="count">{{ contagem.livre }}</span>
+    </a>
+
+    <a class="pill {{ 'active' if filtro == 'ocupada' }}"
+       href="{{ url_for('mesas.listar', status='ocupada') }}">
+        <span class="legend-dot" style="background: var(--danger); margin: 0"></span>
+        Ocupadas <span class="count">{{ contagem.ocupada }}</span>
+    </a>
+
+    <a class="pill {{ 'active' if filtro == 'reservada' }}"
+       href="{{ url_for('mesas.listar', status='reservada') }}">
+        <span class="legend-dot" style="background: var(--warn); margin: 0"></span>
+        Reservadas <span class="count">{{ contagem.reservada }}</span>
+    </a>
 </div>
 
 {% if mesas %}
 <div class="mesa-grid">
-  {% for mesa in mesas %}
-  {% set pedido = mesa.pedido_ativo if mesa.status == 'ocupada' else None %}
-  <div class="card mesa-card {{ mesa.status }}">
-     <div class="dropdown mesa-menu">
-       <button class="btn btn-sm btn-light border-0" data-bs-toggle="dropdown" aria-label="Opções da mesa"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-       <ul class="dropdown-menu dropdown-menu-end">
-          <li>
-             <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalEditarMesa"
-                 data-action="{{ url_for('mesas.editar', mesa_id=mesa.id) }}"
-                 data-campo-numero="{{ mesa.numero }}" data-campo-capacidade="{{ mesa.capacidade }}">
-               <i class="fa-solid fa-pen fa-fw me-2"></i>Editar
-             </button>
-          </li>
-          <li>
-             <form method="post" action="{{ url_for('mesas.excluir', mesa_id=mesa.id) }}" data-confirm="Excluir a mesa {{ mesa.numero }}?">
-               <button class="dropdown-item text-danger"><i class="fa-solid fa-trash fa-fw me-2"></i>Excluir</button>
-             </form>
-          </li>
-       </ul>
-     </div>
+    {% for mesa in mesas %}
+    {% set pedido = mesa.pedido_ativo if mesa.status == 'ocupada' else None %}
 
-     <div>
-       <div class="mesa-numero">Mesa {{ '%02d'|format(mesa.numero) }}</div>
-       <div class="mesa-meta mt-1"><i class="fa-solid fa-users me-1"></i>{{ mesa.capacidade }} lugares</div>
-     </div>
+    <div class="card mesa-card {{ mesa.status }}">
+        <div class="dropdown mesa-menu">
+            <button
+                class="btn btn-sm btn-light border-0"
+                data-bs-toggle="dropdown"
+                aria-label="Opções da mesa">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
 
-     <div>
-       <span class="badge status-{{ mesa.status }}">{{ mesa.status_label }}</span>
-     </div>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <button
+                        class="dropdown-item"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEditarMesa"
+                        data-action="{{ url_for('mesas.editar', mesa_id=mesa.id) }}"
+                        data-campo-numero="{{ mesa.numero }}"
+                        data-campo-capacidade="{{ mesa.capacidade }}">
+                        <i class="fa-solid fa-pen fa-fw me-2"></i>
+                        Editar
+                    </button>
+                </li>
 
-     {% if pedido %}
-     <div class="mesa-pedido">
-       <div class="d-flex justify-content-between">
-         <strong>Pedido #{{ pedido.id }}</strong>
-         <span class="badge status-{{ pedido.status }}">{{ pedido.status_label }}</span>
-       </div>
-       <div class="text-secondary mt-1">{{ pedido.garcom.nome }} · {{ pedido.minutos_decorridos }} min</div>
-       <div class="fw-semibold mt-1">{{ pedido.total|brl }}</div>
-     </div>
+                <li>
+                    <form
+                        method="post"
+                        action="{{ url_for('mesas.excluir', mesa_id=mesa.id) }}"
+                        data-confirm="Excluir a mesa {{ mesa.numero }}?">
+                        <button class="dropdown-item text-danger">
+                            <i class="fa-solid fa-trash fa-fw me-2"></i>
+                            Excluir
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
 
-     <a href="{{ url_for('pedidos.ver', pedido_id=pedido.id) }}" class="btn btn-dark btn-sm mt-auto"><i class="fa-solid fa-eye me-1"></i> Ver pedido</a>
+        <div>
+            <div class="mesa-numero">
+                Mesa {{ '%02d'|format(mesa.numero) }}
+            </div>
+            <div class="mesa-meta mt-1">
+                <i class="fa-solid fa-users me-1"></i>
+                {{ mesa.capacidade }} lugares
+            </div>
+        </div>
 
-     {% else %}
-     <div class="d-flex gap-2 mt-auto">
-       <a href="{{ url_for('pedidos.novo', mesa=mesa.id) }}" class="btn btn-brand btn-sm flex-fill"><i class="fa-solid fa-plus me-1"></i> Abrir pedido</a>
+        <div>
+            <span class="badge status-{{ mesa.status }}">
+                {{ mesa.status_label }}
+            </span>
+        </div>
 
-       <form method="post" action="{{ url_for('mesas.alterar_status', mesa_id=mesa.id) }}">
-          {% if mesa.status == 'reservada' %}
-          <input type="hidden" name="status" value="livre">
-          <button class="btn btn-outline-secondary btn-sm" title="Cancelar reserva"><i class="fa-solid fa-unlock"></i></button>
-          {% else %}
-          <input type="hidden" name="status" value="reservada">
-          <button class="btn btn-outline-secondary btn-sm" title="Reservar mesa"><i class="fa-solid fa-bookmark"></i></button>
-          {% endif %}
-       </form>
-     </div>
-     {% endif %}
-   </div>
-   {% endfor %}
-</div>
+        {% if pedido %}
+        <div class="mesa-pedido">
+            <div class="d-flex justify-content-between">
+                <strong>Pedido #{{ pedido.id }}</strong>
+                <span class="badge status-{{ pedido.status }}">
+                    {{ pedido.status_label }}
+                </span>
+            </div>
 
-{% else %}
-<div class="card">
-  <div class="empty-state">
-    <i class="fa-solid fa-chair"></i>Nenhuma mesa encontrada{% if filtro != 'todas' %} com esse filtro{% endif %}.
-  </div>
-</div>
-{% endif %}
+            <div class="text-secondary mt-1">
+                {{ pedido.garcom.nome }} · {{ pedido.minutos_decorridos }} min
+            </div>
 
-<!-- Modal: nova mesa -->
-<div class="modal fade" id="modalNovaMesa" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-     <form class="modal-content" method="post" action="{{ url_for('mesas.criar') }}">
-       <div class="modal-header">
-         <h5 class="modal-title">Nova mesa</h5>
-         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-       </div>
+            <div class="fw-semibold mt-1">
+                {{ pedido.total|brl }}
+            </div>
+        </div>
 
-       <div class="modal-body">
-         <div class="row g-3">
-           <div class="col-6">
-             <label class="form-label">Número</label>
-             <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="numero" class="form-control" required>
-           </div>
-           <div class="col-6">
-             <label class="form-label">Lugares</label>
-             <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="capacidade" value="4" class="form-control" required>
-           </div>
-         </div>
-       </div>
+        <a
+            href="{{ url_for('pedidos.ver', pedido_id=pedido.id) }}"
+            class="btn btn-dark btn-sm mt-auto">
+            <i class="fa-solid fa-eye me-1"></i>
+            Ver pedido
+        </a>
 
-       <div class="modal-footer">
-         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-         <button class="btn btn-brand">Cadastrar</button>
-       </div>
-     </form>
-  </div>
-</div>
+        {% else %}
+        <div class="d-flex gap-2 mt-auto">
+            <a
+                href="{{ url_for('pedidos.novo', mesa=mesa.id) }}"
+                class="btn btn-brand btn-sm flex-fill">
+                <i class="fa-solid fa-plus me-1"></i>
+                Abrir pedido
+            </a>
 
-<!-- Modal: editar mesa (reutilizado por todas as mesas) -->
-<div class="modal fade" id="modalEditarMesa" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-     <form class="modal-content" method="post" data-modal-form>
-       <div class="modal-header">
-         <h5 class="modal-title">Editar mesa</h5>
-         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-       </div>
+            <form
+                method="post"
+                action="{{ url_for('mesas.alterar_status', mesa_id=mesa.id) }}">
 
-       <div class="modal-body">
-         <div class="row g-3">
-           <div class="col-6">
-             <label class="form-label">Número</label>
-             <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="numero" class="form-control" required>
-           </div>
-           <div class="col-6">
-             <label class="form-label">Lugares</label>
-             <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="capacidade" class="form-control" required>
-           </div>
-         </div>
-       </div>
+                {% if mesa.status == 'reservada' %}
+                <input type="hidden" name="status" value="livre">
 
-       <div class="modal-footer">
-         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-         <button class="btn btn-brand">Salvar</button>
-       </div>
-    </form>
-  </div>
-</div>
-{% endblock %}
+                <button
+                    class="btn btn-outline-secondary btn-sm"
+                    title="Cancelar reserva">
+                    <i class="fa-solid fa-unlock"></i>
+                </button>
+
+                {% else %}
+                <input type="hidden" name="status" value="reservada">
+
+                <button
+                    class="btn btn-outline-secondary btn-sm"
+                    title="Reservar mesa">
+                    <i class="fa

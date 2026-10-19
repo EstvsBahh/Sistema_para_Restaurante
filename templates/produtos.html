@@ -1,197 +1,355 @@
 {% extends "base.html" %}
+
 {% block title %}Produtos{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <div>
-     <h1 class="page-title">Produtos</h1>
-     <p class="page-subtitle">Gerencie o cardápio: preços, categorias e o que está disponível para pedido.</p>
-  </div>
-  <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovoProduto"><i class="fa-solid fa-plus me-1"></i> Novo produto</button>
+    <div>
+        <h1 class="page-title">Produtos</h1>
+        <p class="page-subtitle">
+            Gerencie o cardápio: preços, categorias e o que está disponível para pedido.
+        </p>
+    </div>
+
+    <button
+        class="btn btn-brand"
+        data-bs-toggle="modal"
+        data-bs-target="#modalNovoProduto"
+    >
+        <i class="fa-solid fa-plus me-1"></i> Novo produto
+    </button>
 </div>
 
 <!-- Filtros -->
 <form class="card mb-4" method="get" action="{{ url_for('produtos.listar') }}">
-   <div class="card-body py-3">
-     <div class="row g-2 align-items-end">
-        <div class="col-12 col-md-5">
-           <label class="form-label mb-1">Buscar</label>
-           <div class="input-group">
-             <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
-             <input type="text" name="q" value="{{ busca }}" class="form-control" placeholder="Nome do produto">
-           </div>
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-5">
+                <label class="form-label mb-1">Buscar</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+                    </span>
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ busca }}"
+                        class="form-control"
+                        placeholder="Nome do produto"
+                    >
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label mb-1">Categoria</label>
+                <select name="categoria" class="form-select">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                        <option
+                            value="{{ categoria.id }}"
+                            {{ 'selected' if categoria_id == categoria.id }}
+                        >
+                            {{ categoria.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">Cardápio</label>
+                <select name="situacao" class="form-select">
+                    <option value="todos" {{ 'selected' if situacao == 'todos' }}>Todos</option>
+                    <option value="ativos" {{ 'selected' if situacao == 'ativos' }}>No cardápio</option>
+                    <option value="inativos" {{ 'selected' if situacao == 'inativos' }}>Fora do cardápio</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button class="btn btn-dark flex-fill">Filtrar</button>
+                <a
+                    href="{{ url_for('produtos.listar') }}"
+                    class="btn btn-light border"
+                    title="Limpar filtros"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            </div>
         </div>
-        <div class="col-6 col-md-3">
-           <label class="form-label mb-1">Categoria</label>
-           <select name="categoria" class="form-select">
-             <option value="">Todas</option>
-             {% for categoria in categorias %}
-             <option value="{{ categoria.id }}" {{ 'selected' if categoria_id == categoria.id }}>{{ categoria.nome }}</option>
-             {% endfor %}
-           </select>
-        </div>
-        <div class="col-6 col-md-2">
-           <label class="form-label mb-1">Cardápio</label>
-           <select name="situacao" class="form-select">
-             <option value="todos" {{ 'selected' if situacao == 'todos' }}>Todos</option>
-             <option value="ativos" {{ 'selected' if situacao == 'ativos' }}>No cardápio</option>
-            <option value="inativos" {{ 'selected' if situacao == 'inativos' }}>Fora do cardápio</option>
-          </select>
-        </div>
-        <div class="col-12 col-md-2 d-flex gap-2">
-          <button class="btn btn-dark flex-fill">Filtrar</button>
-          <a href="{{ url_for('produtos.listar') }}" class="btn btn-light border" title="Limpar filtros"><i class="fa-solid fa-xmark"></i></a>
-        </div>
-     </div>
-   </div>
+    </div>
 </form>
 
 <div class="card">
-  {% if produtos %}
-  <div class="table-responsive">
-     <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Produto</th>
-            <th>Categoria</th>
-            <th>Preço</th>
-            <th>Estoque</th>
-            <th>Cardápio</th>
-            <th class="text-end">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for produto in produtos %}
-          <tr class="{{ 'opacity-75' if not produto.ativo }}">
-            <td>
-               <div class="fw-semibold">{{ produto.nome }}</div>
-               <div class="small text-secondary">{{ produto.descricao or 'Sem descrição' }}</div>
-            </td>
-            <td>{{ produto.categoria.nome }}</td>
-            <td class="fw-semibold">{{ produto.preco|brl }}</td>
-            <td>
-               <span class="badge estoque-{{ produto.situacao_estoque }}">
-                 {% if produto.esgotado %}Esgotado{% else %}{{ produto.estoque_atual }} un.{% endif %}
-               </span>
-            </td>
-            <td><span class="badge {{ 'badge-ativo' if produto.ativo else 'badge-inativo' }}">{{ 'No cardápio' if produto.ativo else 'Fora do cardápio' }}</span></td>
-            <td class="text-end text-nowrap">
-               <button class="btn btn-sm btn-outline-secondary" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarProduto"
-                    data-action="{{ url_for('produtos.editar', produto_id=produto.id) }}"
-                    data-campo-nome="{{ produto.nome }}" data-campo-descricao="{{ produto.descricao or '' }}"
-                    data-campo-preco="{{ '%.2f'|format(produto.preco) }}" data-campo-categoria-id="{{ produto.categoria_id }}"
-                    data-campo-ativo="{{ 1 if produto.ativo else 0 }}">
-                 <i class="fa-solid fa-pen"></i>
-               </button>
-               <form class="d-inline" method="post" action="{{ url_for('produtos.alternar', produto_id=produto.id) }}">
-                 <button class="btn btn-sm btn-outline-secondary" title="{{ 'Retirar do cardápio' if produto.ativo else 'Voltar ao cardápio' }}">
-                    <i class="fa-solid {{ 'fa-eye-slash' if produto.ativo else 'fa-eye' }}"></i>
-                 </button>
-               </form>
-               <form class="d-inline" method="post" action="{{ url_for('produtos.excluir', produto_id=produto.id) }}" data-confirm="Excluir definitivamente {{ produto.nome }}?">
-                 <button class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-               </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-     </table>
-   </div>
-   {% else %}
-   <div class="empty-state"><i class="fa-solid fa-burger"></i>Nenhum produto encontrado.</div>
-   {% endif %}
+    {% if produtos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                        <th>Cardápio</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for produto in produtos %}
+                        <tr class="{{ 'opacity-75' if not produto.ativo }}">
+                            <td>
+                                <div class="fw-semibold">{{ produto.nome }}</div>
+                                <div class="small text-secondary">
+                                    {{ produto.descricao or 'Sem descrição' }}
+                                </div>
+                            </td>
+
+                            <td>{{ produto.categoria.nome }}</td>
+                            <td class="fw-semibold">{{ produto.preco|brl }}</td>
+
+                            <td>
+                                <span class="badge estoque-{{ produto.situacao_estoque }}">
+                                    {% if produto.esgotado %}
+                                        Esgotado
+                                    {% else %}
+                                        {{ produto.estoque_atual }} un.
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge {{ 'badge-ativo' if produto.ativo else 'badge-inativo' }}">
+                                    {{ 'No cardápio' if produto.ativo else 'Fora do cardápio' }}
+                                </span>
+                            </td>
+
+                            <td class="text-end text-nowrap">
+                                <button
+                                    class="btn btn-sm btn-outline-secondary"
+                                    title="Editar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEditarProduto"
+                                    data-action="{{ url_for('produtos.editar', produto_id=produto.id) }}"
+                                    data-campo-nome="{{ produto.nome }}"
+                                    data-campo-descricao="{{ produto.descricao or '' }}"
+                                    data-campo-preco="{{ '%.2f'|format(produto.preco) }}"
+                                    data-campo-categoria-id="{{ produto.categoria_id }}"
+                                    data-campo-ativo="{{ 1 if produto.ativo else 0 }}"
+                                >
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+
+                                <form
+                                    class="d-inline"
+                                    method="post"
+                                    action="{{ url_for('produtos.alternar', produto_id=produto.id) }}"
+                                >
+                                    <button
+                                        class="btn btn-sm btn-outline-secondary"
+                                        title="{{ 'Retirar do cardápio' if produto.ativo else 'Voltar ao cardápio' }}"
+                                    >
+                                        <i class="fa-solid {{ 'fa-eye-slash' if produto.ativo else 'fa-eye' }}"></i>
+                                    </button>
+                                </form>
+
+                                <form
+                                    class="d-inline"
+                                    method="post"
+                                    action="{{ url_for('produtos.excluir', produto_id=produto.id) }}"
+                                    data-confirm="Excluir definitivamente {{ produto.nome }}?"
+                                >
+                                    <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-burger"></i>
+            Nenhum produto encontrado.
+        </div>
+    {% endif %}
 </div>
 
 <!-- Modal: novo produto -->
 <div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
-   <div class="modal-dialog modal-dialog-centered modal-lg">
-     <form class="modal-content" method="post" action="{{ url_for('produtos.criar') }}">
-       <div class="modal-header">
-         <h5 class="modal-title">Novo produto</h5>
-         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-       </div>
-       <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-8">
-              <label class="form-label">Nome</label>
-              <input type="text" name="nome" maxlength="100" class="form-control" required>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content" method="post" action="{{ url_for('produtos.criar') }}">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Preço (R$)</label>
-              <input type="text" inputmode="decimal" data-numero="decimal" autocomplete="off" name="preco" placeholder="0,00" class="form-control" required>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Nome</label>
+                        <input
+                            type="text"
+                            name="nome"
+                            maxlength="100"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Preço (R$)</label>
+                        <input
+                            type="text"
+                            inputmode="decimal"
+                            data-numero="decimal"
+                            autocomplete="off"
+                            name="preco"
+                            placeholder="0,00"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">
+                            Descrição
+                            <span class="text-secondary fw-normal">(opcional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="descricao"
+                            maxlength="255"
+                            class="form-control"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Categoria</label>
+                        <select name="categoria_id" class="form-select" required>
+                            <option value="" disabled selected>Selecione</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Estoque inicial</label>
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            data-numero="inteiro"
+                            autocomplete="off"
+                            name="estoque_atual"
+                            value="0"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+                </div>
+
+                {% if not categorias %}
+                    <div class="alert alert-warning mt-3 mb-0 small">
+                        Cadastre ao menos uma categoria antes de criar produtos.
+                    </div>
+                {% endif %}
             </div>
-            <div class="col-12">
-              <label class="form-label">Descrição <span class="text-secondary fw-normal">(opcional)</span></label>
-              <input type="text" name="descricao" maxlength="255" class="form-control">
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button class="btn btn-brand">Cadastrar</button>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Categoria</label>
-              <select name="categoria_id" class="form-select" required>
-                 <option value="" disabled selected>Selecione</option>
-                 {% for categoria in categorias %}<option value="{{ categoria.id }}">{{ categoria.nome }}</option>{% endfor %}
-               </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Estoque inicial</label>
-              <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" name="estoque_atual" value="0" class="form-control" required>
-            </div>
-          </div>
-          {% if not categorias %}
-          <div class="alert alert-warning mt-3 mb-0 small">Cadastre ao menos uma categoria antes de criar produtos.</div>
-          {% endif %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-brand">Cadastrar</button>
-        </div>
-     </form>
-   </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal: editar produto (reutilizado) -->
 <div class="modal fade" id="modalEditarProduto" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-     <form class="modal-content" method="post" data-modal-form>
-       <div class="modal-header">
-         <h5 class="modal-title">Editar produto</h5>
-         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-       </div>
-       <div class="modal-body">
-         <div class="row g-3">
-           <div class="col-md-8">
-             <label class="form-label">Nome</label>
-             <input type="text" name="nome" maxlength="100" class="form-control" required>
-           </div>
-           <div class="col-md-4">
-             <label class="form-label">Preço (R$)</label>
-             <input type="text" inputmode="decimal" data-numero="decimal" autocomplete="off" name="preco" class="form-control" required>
-           </div>
-           <div class="col-12">
-             <label class="form-label">Descrição</label>
-             <input type="text" name="descricao" maxlength="255" class="form-control">
-           </div>
-           <div class="col-md-6">
-              <label class="form-label">Categoria</label>
-              <select name="categoria_id" class="form-select" required>
-                {% for categoria in categorias %}<option value="{{ categoria.id }}">{{ categoria.nome }}</option>{% endfor %}
-              </select>
-           </div>
-           <div class="col-md-6 d-flex align-items-end">
-              <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" role="switch" name="ativo" id="editarAtivo">
-                 <label class="form-check-label" for="editarAtivo">No cardápio</label>
-               </div>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content" method="post" data-modal-form>
+            <div class="modal-header">
+                <h5 class="modal-title">Editar produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-          </div>
-          <p class="small text-secondary mt-3 mb-0">
-            <i class="fa-solid fa-circle-info me-1"></i>Para alterar a quantidade em estoque, use a tela de <a href="{{ url_for('produtos.estoque') }}">Estoque</a>.
-          </p>
-       </div>
-       <div class="modal-footer">
-         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-         <button class="btn btn-brand">Salvar alterações</button>
-       </div>
-     </form>
-   </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Nome</label>
+                        <input
+                            type="text"
+                            name="nome"
+                            maxlength="100"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Preço (R$)</label>
+                        <input
+                            type="text"
+                            inputmode="decimal"
+                            data-numero="decimal"
+                            autocomplete="off"
+                            name="preco"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Descrição</label>
+                        <input
+                            type="text"
+                            name="descricao"
+                            maxlength="255"
+                            class="form-control"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Categoria</label>
+                        <select name="categoria_id" class="form-select" required>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                name="ativo"
+                                id="editarAtivo"
+                            >
+                            <label class="form-check-label" for="editarAtivo">
+                                No cardápio
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="small text-secondary mt-3 mb-0">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Para alterar a quantidade em estoque, use a tela de
+                    <a href="{{ url_for('produtos.estoque') }}">Estoque</a>.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button class="btn btn-brand">Salvar alterações</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
