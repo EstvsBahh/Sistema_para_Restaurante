@@ -10,237 +10,134 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
     {% block head %}{% endblock %}
 </head>
 <body>
-    {% set ep = request.endpoint or '' %}
-    {% set bp = request.blueprint or '' %}
+{% set ep = request.endpoint or '' %}
+{% set bp = request.blueprint or '' %}
 
-    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
-        <div class="container-fluid px-3 px-lg-4" style="max-width: 1400px;">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
-                <span class="brand-icon"><i class="fa-solid fa-utensils"></i></span>
-                {{ nome_restaurante }}
-            </a>
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+    <div class="container-fluid px-3 px-lg-4" style="max-width: 1400px;">
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+            <span class="brand-icon"><i class="fa-solid fa-utensils"></i></span>{{ nome_restaurante }}
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-label="Abrir menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-label="Abrir menu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="menuPrincipal">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-lg-1">
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if ep == 'home' }}" href="{{ url_for('home') }}">
-                            <i class="fa-solid fa-chart-pie me-1"></i> Dashboard
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if bp == 'mesas' }}" href="{{ url_for('mesas.listar') }}">
-                            <i class="fa-solid fa-table-cells-large me-1"></i> Mesas
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if ep == 'pedidos.novo' }}" href="{{ url_for('pedidos.novo') }}">
-                            <i class="fa-solid fa-plus me-1"></i> Novo pedido
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if ep == 'pedidos.cozinha' }}" href="{{ url_for('pedidos.cozinha') }}">
-                            <i class="fa-solid fa-fire-burner me-1"></i> Cozinha
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if bp == 'pagamentos' }}" href="{{ url_for('pagamentos.caixa') }}">
-                            <i class="fa-solid fa-cash-register me-1"></i> Caixa
-                        </a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ 'active' if bp in ('produtos', 'categorias') }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-book-open me-1"></i> Cardápio
-                        </a>
-
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('produtos.listar') }}">
-                                    <i class="fa-solid fa-burger fa-fw me-2 text-secondary"></i>Produtos
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('categorias.listar') }}">
-                                    <i class="fa-solid fa-tags fa-fw me-2 text-secondary"></i>Categorias
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('produtos.estoque') }}">
-                                    <i class="fa-solid fa-boxes-stacked fa-fw me-2 text-secondary"></i>Estoque
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if bp == 'garcons' }}" href="{{ url_for('garcons.listar') }}">
-                            <i class="fa-solid fa-user-tie me-1"></i> Garçons
-                        </a>
-                    </li>
-                </ul>
-
-                {% if caixa_atual %}
-                    <a href="{{ url_for('pagamentos.caixa') }}" class="caixa-pill aberto">
-                        <i class="fa-solid fa-circle me-1" style="font-size:.5rem; vertical-align:middle"></i>
-                        Caixa aberto
+        <div class="collapse navbar-collapse" id="menuPrincipal">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-lg-1">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if ep == 'home' }}" href="{{ url_for('home') }}"><i class="fa-solid fa-chart-pie me-1"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if bp == 'mesas' }}" href="{{ url_for('mesas.listar') }}"><i class="fa-solid fa-table-cells-large me-1"></i> Mesas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if ep == 'pedidos.novo' }}" href="{{ url_for('pedidos.novo') }}"><i class="fa-solid fa-plus me-1"></i> Novo pedido</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if ep == 'pedidos.cozinha' }}" href="{{ url_for('pedidos.cozinha') }}"><i class="fa-solid fa-fire-burner me-1"></i> Cozinha</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if bp == 'pagamentos' }}" href="{{ url_for('pagamentos.caixa') }}"><i class="fa-solid fa-cash-register me-1"></i> Caixa</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ 'active' if bp in ('produtos', 'categorias') }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-book-open me-1"></i> Cardápio
                     </a>
-                {% else %}
-                    <a href="{{ url_for('pagamentos.caixa') }}" class="caixa-pill fechado">
-                        <i class="fa-solid fa-lock me-1"></i> Caixa fechado
-                    </a>
-                {% endif %}
-            </div>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('produtos.listar') }}"><i class="fa-solid fa-burger fa-fw me-2 text-secondary"></i>Produtos</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categorias.listar') }}"><i class="fa-solid fa-tags fa-fw me-2 text-secondary"></i>Categorias</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('produtos.estoque') }}"><i class="fa-solid fa-boxes-stacked fa-fw me-2 text-secondary"></i>Estoque</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if bp == 'garcons' }}" href="{{ url_for('garcons.listar') }}"><i class="fa-solid fa-user-tie me-1"></i> Garçons</a>
+                </li>
+            </ul>
+
+            {% if caixa_atual %}
+            <a href="{{ url_for('pagamentos.caixa') }}" class="caixa-pill aberto"><i class="fa-solid fa-circle me-1" style="font-size:.5rem; vertical-align:middle"></i> Caixa aberto</a>
+            {% else %}
+            <a href="{{ url_for('pagamentos.caixa') }}" class="caixa-pill fechado"><i class="fa-solid fa-lock me-1"></i> Caixa fechado</a>
+            {% endif %}
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <main class="app-container">
-        {% set icones = {
-            'success': 'fa-circle-check',
-            'danger': 'fa-circle-xmark',
-            'warning': 'fa-triangle-exclamation',
-            'info': 'fa-circle-info'
-        } %}
+<main class="app-container">
+    {% set icones = {'success': 'fa-circle-check', 'danger': 'fa-circle-xmark', 'warning': 'fa-triangle-exclamation', 'info': 'fa-circle-info'} %}
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria, mensagem in mensagens %}
+            {% set tipo = 'info' if categoria == 'message' else categoria %}
+            <div class="alert alert-{{ tipo }} alert-dismissible fade show shadow-sm border-0 flash-auto" role="alert">
+                <i class="fa-solid {{ icones.get(tipo, 'fa-circle-info') }} me-2"></i>{{ mensagem }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        {% endfor %}
+    {% endwith %}
 
-        {% with mensagens = get_flashed_messages(with_categories=true) %}
-            {% for categoria, mensagem in mensagens %}
-                {% set tipo = 'info' if categoria == 'message' else categoria %}
-                <div class="alert alert-{{ tipo }} alert-dismissible fade show shadow-sm border-0 flash-auto" role="alert">
-                    <i class="fa-solid {{ icones.get(tipo, 'fa-circle-info') }} me-2"></i>{{ mensagem }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-            {% endfor %}
-        {% endwith %}
+    {% block content %}{% endblock %}
+</main>
 
-        {% block content %}{% endblock %}
-    </main>
+<footer class="app-footer">{{ nome_restaurante }} · Sistema de Gestão de Restaurante · {{ ano_atual }}</footer>
 
-    <footer class="app-footer">
-        {{ nome_restaurante }} · Sistema de Gestão de Restaurante · {{ ano_atual }}
-    </footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    (function () {
+        var permitido = { inteiro: /^\d*$/, decimal: /^[\d.,]*$/, telefone: /^[\d\s()+\-]*$/ };
 
-    <script>
-        (function () {
-            var permitido = {
-                inteiro: /^\d*$/,
-                decimal: /^[\d.,]*$/,
-                telefone: /^[\d\s()+\-]*$/
-            };
+        function limpar(valor, tipo) {
+            if (tipo === 'inteiro') { return valor.replace(/\D/g, ''); }
+            if (tipo === 'telefone') { return valor.replace(/[^\d\s()+\-]/g, ''); }
+            valor = valor.replace(/[^\d.,]/g, '');
+            var indice = valor.search(/[.,]/);
+            if (indice === -1) { return valor; }
+            var inteira = valor.slice(0, indice);
+            var decimais = valor.slice(indice + 1).replace(/[.,]/g, '').slice(0, 2);
+            return inteira + valor.charAt(indice) + decimais;
+        }
 
-            function limpar(valor, tipo) {
-                if (tipo === 'inteiro') {
-                    return valor.replace(/\D/g, '');
-                }
-
-                if (tipo === 'telefone') {
-                    return valor.replace(/[^\d\s()+\-]/g, '');
-                }
-
-                valor = valor.replace(/[^\d.,]/g, '');
-                var indice = valor.search(/[.,]/);
-
-                if (indice === -1) {
-                    return valor;
-                }
-
-                var inteira = valor.slice(0, indice);
-                var decimais = valor.slice(indice + 1).replace(/[.,]/g, '').slice(0, 2);
-
-                return inteira + valor.charAt(indice) + decimais;
-            }
-
-            document.addEventListener('beforeinput', function (e) {
-                var campo = e.target;
-
-                if (!campo.dataset || !campo.dataset.numero || !e.data) {
-                    return;
-                }
-
-                if (!permitido[campo.dataset.numero].test(e.data)) {
-                    e.preventDefault();
-                }
-            });
-
-            document.addEventListener('input', function (e) {
-                var campo = e.target;
-
-                if (!campo.dataset || !campo.dataset.numero) {
-                    return;
-                }
-
-                var limpo = limpar(campo.value, campo.dataset.numero);
-
-                if (limpo !== campo.value) {
-                    campo.value = limpo;
-                }
-            });
-        })();
-
-        document.querySelectorAll('.flash-auto.alert-success, .flash-auto.alert-info').forEach(function (alerta) {
-            setTimeout(function () {
-                bootstrap.Alert.getOrCreateInstance(alerta).close();
-            }, 5000);
+        document.addEventListener('beforeinput', function (e) {
+            var campo = e.target;
+            if (!campo.dataset || !campo.dataset.numero || !e.data) { return; }
+            if (!permitido[campo.dataset.numero].test(e.data)) { e.preventDefault(); }
         });
 
-        document.addEventListener('submit', function (evento) {
-            var mensagem = evento.target.dataset.confirm;
-
-            if (mensagem && !window.confirm(mensagem)) {
-                evento.preventDefault();
-            }
+        document.addEventListener('input', function (e) {
+            var campo = e.target;
+            if (!campo.dataset || !campo.dataset.numero) { return; }
+            var limpo = limpar(campo.value, campo.dataset.numero);
+            if (limpo !== campo.value) { campo.value = limpo; }
         });
+    })();
 
-        document.addEventListener('show.bs.modal', function (evento) {
-            var gatilho = evento.relatedTarget;
-            var formulario = evento.target.querySelector('form[data-modal-form]');
+    document.querySelectorAll('.flash-auto.alert-success, .flash-auto.alert-info').forEach(function (alerta) {
+        setTimeout(function () { bootstrap.Alert.getOrCreateInstance(alerta).close(); }, 5000);
+    });
 
-            if (!gatilho || !formulario) {
-                return;
-            }
+    document.addEventListener('submit', function (evento) {
+        var mensagem = evento.target.dataset.confirm;
+        if (mensagem && !window.confirm(mensagem)) { evento.preventDefault(); }
+    });
 
-            if (gatilho.dataset.action) {
-                formulario.action = gatilho.dataset.action;
-            }
-
-            Object.keys(gatilho.dataset).forEach(function (chave) {
-                if (chave.indexOf('campo') !== 0) {
-                    return;
-                }
-
-                var nome = chave.slice(5)
-                    .replace(/[A-Z]/g, function (m) {
-                        return '_' + m.toLowerCase();
-                    })
-                    .replace(/^_/, '');
-
-                var campo = formulario.elements[nome];
-
-                if (!campo) {
-                    return;
-                }
-
-                if (campo.type === 'checkbox') {
-                    campo.checked = gatilho.dataset[chave] === '1';
-                } else {
-                    campo.value = gatilho.dataset[chave];
-                }
-            });
+    document.addEventListener('show.bs.modal', function (evento) {
+        var gatilho = evento.relatedTarget;
+        var formulario = evento.target.querySelector('form[data-modal-form]');
+        if (!gatilho || !formulario) { return; }
+        if (gatilho.dataset.action) { formulario.action = gatilho.dataset.action; }
+        Object.keys(gatilho.dataset).forEach(function (chave) {
+            if (chave.indexOf('campo') !== 0) { return; }
+            var nome = chave.slice(5).replace(/[A-Z]/g, function (m) { return '_' + m.toLowerCase(); }).replace(/^_/, '');
+            var campo = formulario.elements[nome];
+            if (!campo) { return; }
+            if (campo.type === 'checkbox') { campo.checked = gatilho.dataset[chave] === '1'; }
+            else { campo.value = gatilho.dataset[chave]; }
         });
-    </script>
-
-    {% block scripts %}{% endblock %}
+    });
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

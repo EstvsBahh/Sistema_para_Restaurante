@@ -1,14 +1,11 @@
 {% extends "base.html" %}
-
 {% block title %}Novo pedido{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <h1 class="page-title">Novo pedido</h1>
-        <p class="page-subtitle">
-            Toque nos produtos para montar a comanda e lance tudo de uma vez.
-        </p>
+        <p class="page-subtitle">Toque nos produtos para montar a comanda e lance tudo de uma vez.</p>
     </div>
 </div>
 
@@ -20,25 +17,15 @@
                 <div class="row g-2 align-items-center">
                     <div class="col-12 col-md-5">
                         <div class="input-group">
-                            <span class="input-group-text bg-white">
-                                <i class="fa-solid fa-magnifying-glass text-secondary"></i>
-                            </span>
-                            <input
-                                type="search"
-                                id="busca-produto"
-                                class="form-control"
-                                placeholder="Buscar produto...">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
+                            <input type="search" id="busca-produto" class="form-control" placeholder="Buscar produto...">
                         </div>
                     </div>
-
                     <div class="col-12 col-md-7">
                         <div class="filter-pills" id="filtro-categorias">
                             <a href="#" class="pill active" data-categoria="todas">Todas</a>
-
                             {% for categoria in categorias %}
-                            <a href="#" class="pill" data-categoria="{{ categoria.id }}">
-                                {{ categoria.nome }}
-                            </a>
+                            <a href="#" class="pill" data-categoria="{{ categoria.id }}">{{ categoria.nome }}</a>
                             {% endfor %}
                         </div>
                     </div>
@@ -49,158 +36,69 @@
         {% if produtos %}
         <div class="catalogo-grid" id="catalogo">
             {% for produto in produtos %}
-            <button
-                type="button"
-                class="produto-card"
-                data-id="{{ produto.id }}"
-                data-nome="{{ produto.nome }}"
-                data-preco="{{ '%.2f'|format(produto.preco) }}"
-                data-estoque="{{ produto.estoque_atual }}"
-                data-categoria="{{ produto.categoria_id }}"
-                {{ 'disabled' if produto.esgotado }}>
-
+            <button type="button" class="produto-card"
+                    data-id="{{ produto.id }}" data-nome="{{ produto.nome }}"
+                    data-preco="{{ '%.2f'|format(produto.preco) }}" data-estoque="{{ produto.estoque_atual }}"
+                    data-categoria="{{ produto.categoria_id }}" {{ 'disabled' if produto.esgotado }}>
                 <span class="produto-nome">{{ produto.nome }}</span>
                 <span class="produto-desc">{{ produto.descricao or '' }}</span>
                 <span class="produto-preco">{{ produto.preco|brl }}</span>
-
                 <span class="produto-estoque">
-                    {% if produto.esgotado %}
-                    <span class="text-danger fw-semibold">Esgotado</span>
-                    {% else %}
-                    {{ produto.estoque_atual }} em estoque
-                    {% endif %}
+                    {% if produto.esgotado %}<span class="text-danger fw-semibold">Esgotado</span>
+                    {% else %}{{ produto.estoque_atual }} em estoque{% endif %}
                 </span>
             </button>
             {% endfor %}
         </div>
-
-        <div class="card mt-3 d-none" id="catalogo-vazio">
-            <div class="empty-state">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                Nenhum produto encontrado.
-            </div>
-        </div>
-
+        <div class="card mt-3 d-none" id="catalogo-vazio"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Nenhum produto encontrado.</div></div>
         {% else %}
-        <div class="card">
-            <div class="empty-state">
-                <i class="fa-solid fa-burger"></i>
-                Nenhum produto no cardápio.
-                <a href="{{ url_for('produtos.listar') }}">Cadastre produtos</a>
-                para começar.
-            </div>
-        </div>
+        <div class="card"><div class="empty-state"><i class="fa-solid fa-burger"></i>Nenhum produto no cardápio. <a href="{{ url_for('produtos.listar') }}">Cadastre produtos</a> para começar.</div></div>
         {% endif %}
     </div>
 
     <!-- Comanda -->
     <div class="col-12 col-lg-5 col-xl-4">
-        <form
-            class="card comanda"
-            method="post"
-            action="{{ url_for('pedidos.criar') }}"
-            id="form-comanda">
-
-            <div class="card-header">
-                <i class="fa-solid fa-clipboard-list me-2 text-secondary"></i>
-                Comanda
-            </div>
-
+        <form class="card comanda" method="post" action="{{ url_for('pedidos.criar') }}" id="form-comanda">
+            <div class="card-header"><i class="fa-solid fa-clipboard-list me-2 text-secondary"></i>Comanda</div>
             <div class="card-body">
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label">Mesa</label>
                         <select name="mesa_id" class="form-select" required>
-                            <option value="" disabled {{ 'selected' if not mesa_selecionada }}>
-                                Selecione
-                            </option>
-
+                            <option value="" disabled {{ 'selected' if not mesa_selecionada }}>Selecione</option>
                             {% for mesa in mesas %}
-                            <option
-                                value="{{ mesa.id }}"
-                                {{ 'selected' if mesa_selecionada == mesa.id }}>
-                                Mesa {{ mesa.numero }}{{ ' (reservada)' if mesa.status == 'reservada' }}
-                            </option>
+                            <option value="{{ mesa.id }}" {{ 'selected' if mesa_selecionada == mesa.id }}>Mesa {{ mesa.numero }}{{ ' (reservada)' if mesa.status == 'reservada' }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
                     <div class="col-6">
                         <label class="form-label">Garçom</label>
                         <select name="garcom_id" class="form-select" required>
                             <option value="" disabled selected>Selecione</option>
-
-                            {% for garcom in garcons %}
-                            <option value="{{ garcom.id }}">{{ garcom.nome }}</option>
-                            {% endfor %}
+                            {% for garcom in garcons %}<option value="{{ garcom.id }}">{{ garcom.nome }}</option>{% endfor %}
                         </select>
                     </div>
                 </div>
+                {% if not mesas %}<div class="alert alert-warning small py-2">Todas as mesas estão ocupadas ou não há mesas cadastradas.</div>{% endif %}
+                {% if not garcons %}<div class="alert alert-warning small py-2">Cadastre um garçom ativo para lançar pedidos.</div>{% endif %}
 
-                {% if not mesas %}
-                <div class="alert alert-warning small py-2">
-                    Todas as mesas estão ocupadas ou não há mesas cadastradas.
-                </div>
-                {% endif %}
-
-                {% if not garcons %}
-                <div class="alert alert-warning small py-2">
-                    Cadastre um garçom ativo para lançar pedidos.
-                </div>
-                {% endif %}
-
-                <div id="cart-empty" class="cart-empty">
-                    <i class="fa-solid fa-hand-pointer d-block fs-3 mb-2 opacity-25"></i>
-                    Toque em um produto para adicionar.
-                </div>
-
+                <div id="cart-empty" class="cart-empty"><i class="fa-solid fa-hand-pointer d-block fs-3 mb-2 opacity-25"></i>Toque em um produto para adicionar.</div>
                 <div id="cart-items"></div>
 
                 <div class="mt-3">
-                    <label class="form-label">
-                        Observação geral
-                        <span class="text-secondary fw-normal">(opcional)</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="observacao"
-                        maxlength="255"
-                        class="form-control form-control-sm"
-                        placeholder="Ex: aniversário, alergia a amendoim...">
+                    <label class="form-label">Observação geral <span class="text-secondary fw-normal">(opcional)</span></label>
+                    <input type="text" name="observacao" maxlength="255" class="form-control form-control-sm" placeholder="Ex: aniversário, alergia a amendoim...">
                 </div>
             </div>
-
             <div class="card-footer bg-transparent border-top p-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <div class="small text-secondary">
-                            Total · <span id="cart-count">0</span> item(ns)
-                        </div>
-                        <div class="cart-total" id="cart-total">R$ 0,00</div>
-                    </div>
+                    <div><div class="small text-secondary">Total · <span id="cart-count">0</span> item(ns)</div><div class="cart-total" id="cart-total">R$ 0,00</div></div>
                 </div>
-
                 <div class="form-check form-switch mb-3">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        name="enviar"
-                        id="enviar"
-                        checked>
-                    <label class="form-check-label small" for="enviar">
-                        Enviar para a cozinha agora
-                    </label>
+                    <input class="form-check-input" type="checkbox" role="switch" name="enviar" id="enviar" checked>
+                    <label class="form-check-label small" for="enviar">Enviar para a cozinha agora</label>
                 </div>
-
-                <button
-                    type="submit"
-                    class="btn btn-brand w-100 py-2"
-                    id="btn-lancar"
-                    disabled>
-                    <i class="fa-solid fa-paper-plane me-1"></i>
-                    Lançar pedido
-                </button>
+                <button type="submit" class="btn btn-brand w-100 py-2" id="btn-lancar" disabled><i class="fa-solid fa-paper-plane me-1"></i> Lançar pedido</button>
             </div>
         </form>
     </div>
@@ -210,7 +108,7 @@
 {% block scripts %}
 <script>
 (function () {
-    var carrinho = {}; // id -> {id, nome, preco, estoque, qtd, obs}
+    var carrinho = {};                       // id -> {id, nome, preco, estoque, qtd, obs}
     var lista = document.getElementById('cart-items');
     var vazio = document.getElementById('cart-empty');
     var totalEl = document.getElementById('cart-total');
@@ -218,69 +116,31 @@
     var botao = document.getElementById('btn-lancar');
     var form = document.getElementById('form-comanda');
 
-    function moeda(valor) {
-        return valor.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    }
-
+    function moeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     function esc(texto) {
-        var d = document.createElement('div');
-        d.textContent = texto;
-        return d.innerHTML;
+        var d = document.createElement('div'); d.textContent = texto; return d.innerHTML;
     }
 
     function render() {
-        var ids = Object.keys(carrinho);
-        var total = 0;
-        var quantidade = 0;
-        var html = '';
-
+        var ids = Object.keys(carrinho), total = 0, quantidade = 0, html = '';
         ids.forEach(function (id) {
             var i = carrinho[id];
-
-            total += i.preco * i.qtd;
-            quantidade += i.qtd;
-
-            html +=
-                '<div class="cart-item" data-id="' + i.id + '">' +
-                    '<input type="hidden" name="produto_id" value="' + i.id + '">' +
-                    '<input type="hidden" name="quantidade" value="' + i.qtd + '">' +
-
-                    '<div class="d-flex justify-content-between align-items-start gap-2">' +
-                        '<div class="fw-medium small">' +
-                            esc(i.nome) +
-                            '<div class="text-secondary">' + moeda(i.preco) + ' un.</div>' +
-                        '</div>' +
-
-                        '<div class="text-end">' +
-                            '<div class="fw-semibold small mb-1">' +
-                                moeda(i.preco * i.qtd) +
-                            '</div>' +
-
-                            '<div class="qty-control">' +
-                                '<button type="button" class="btn btn-outline-secondary" data-acao="menos" aria-label="Diminuir">' +
-                                    '<i class="fa-solid fa-minus"></i>' +
-                                '</button>' +
-
-                                '<span class="fw-semibold small" style="min-width: 1.4rem; text-align: center">' +
-                                    i.qtd +
-                                '</span>' +
-
-                                '<button type="button" class="btn btn-outline-secondary" data-acao="mais" aria-label="Aumentar">' +
-                                    '<i class="fa-solid fa-plus"></i>' +
-                                '</button>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-
-                    '<input type="text" name="observacao_item" maxlength="200" value="' +
-                        esc(i.obs).replace(/"/g, '&quot;') +
-                        '" class="form-control form-control-sm mt-2" placeholder="Observação (ex: sem cebola)">' +
-                '</div>';
+            total += i.preco * i.qtd; quantidade += i.qtd;
+            html += '<div class="cart-item" data-id="' + i.id + '">' +
+                '<input type="hidden" name="produto_id" value="' + i.id + '">' +
+                '<input type="hidden" name="quantidade" value="' + i.qtd + '">' +
+                '<div class="d-flex justify-content-between align-items-start gap-2">' +
+                    '<div class="fw-medium small">' + esc(i.nome) + '<div class="text-secondary">' + moeda(i.preco) + ' un.</div></div>' +
+                    '<div class="text-end"><div class="fw-semibold small mb-1">' + moeda(i.preco * i.qtd) + '</div>' +
+                    '<div class="qty-control">' +
+                        '<button type="button" class="btn btn-outline-secondary" data-acao="menos" aria-label="Diminuir"><i class="fa-solid fa-minus"></i></button>' +
+                        '<span class="fw-semibold small" style="min-width:1.4rem;text-align:center">' + i.qtd + '</span>' +
+                        '<button type="button" class="btn btn-outline-secondary" data-acao="mais" aria-label="Aumentar"><i class="fa-solid fa-plus"></i></button>' +
+                    '</div></div>' +
+                '</div>' +
+                '<input type="text" name="observacao_item" maxlength="200" value="' + esc(i.obs).replace(/"/g, '&quot;') + '" class="form-control form-control-sm mt-2" placeholder="Observação (ex: sem cebola)">' +
+            '</div>';
         });
-
         lista.innerHTML = html;
         vazio.classList.toggle('d-none', ids.length > 0);
         totalEl.textContent = moeda(total);
@@ -291,66 +151,36 @@
     function adicionar(card) {
         var id = card.dataset.id;
         var estoque = parseInt(card.dataset.estoque, 10);
-
         if (!carrinho[id]) {
-            carrinho[id] = {
-                id: id,
-                nome: card.dataset.nome,
-                preco: parseFloat(card.dataset.preco),
-                estoque: estoque,
-                qtd: 0,
-                obs: ''
-            };
+            carrinho[id] = { id: id, nome: card.dataset.nome, preco: parseFloat(card.dataset.preco), estoque: estoque, qtd: 0, obs: '' };
         }
-
-        if (carrinho[id].qtd >= estoque) {
-            alert('Estoque máximo de "' + card.dataset.nome + '" atingido (' + estoque + ').');
-            return;
-        }
-
+        if (carrinho[id].qtd >= estoque) { alert('Estoque máximo de "' + card.dataset.nome + '" atingido (' + estoque + ').'); return; }
         carrinho[id].qtd += 1;
         render();
     }
 
     // Clique nos produtos
     var catalogo = document.getElementById('catalogo');
-
     if (catalogo) {
         catalogo.addEventListener('click', function (e) {
             var card = e.target.closest('.produto-card');
-
-            if (card && !card.disabled) {
-                adicionar(card);
-            }
+            if (card && !card.disabled) { adicionar(card); }
         });
     }
 
     // Botões + e - dentro da comanda
     lista.addEventListener('click', function (e) {
         var botaoQtd = e.target.closest('button[data-acao]');
-
-        if (!botaoQtd) {
-            return;
-        }
-
+        if (!botaoQtd) { return; }
         var id = botaoQtd.closest('.cart-item').dataset.id;
         var item = carrinho[id];
-
         if (botaoQtd.dataset.acao === 'mais') {
-            if (item.qtd >= item.estoque) {
-                alert('Estoque máximo atingido (' + item.estoque + ').');
-                return;
-            }
-
+            if (item.qtd >= item.estoque) { alert('Estoque máximo atingido (' + item.estoque + ').'); return; }
             item.qtd += 1;
         } else {
             item.qtd -= 1;
-
-            if (item.qtd <= 0) {
-                delete carrinho[id];
-            }
+            if (item.qtd <= 0) { delete carrinho[id]; }
         }
-
         render();
     });
 
@@ -358,67 +188,36 @@
     lista.addEventListener('input', function (e) {
         if (e.target.name === 'observacao_item') {
             var id = e.target.closest('.cart-item').dataset.id;
-
-            if (carrinho[id]) {
-                carrinho[id].obs = e.target.value;
-            }
+            if (carrinho[id]) { carrinho[id].obs = e.target.value; }
         }
     });
 
     form.addEventListener('submit', function (e) {
-        if (Object.keys(carrinho).length === 0) {
-            e.preventDefault();
-            alert('Adicione ao menos um produto.');
-        }
+        if (Object.keys(carrinho).length === 0) { e.preventDefault(); alert('Adicione ao menos um produto.'); }
     });
 
-    // Busca e filtro por categoria
+    // Busca + filtro por categoria
     var busca = document.getElementById('busca-produto');
     var pills = document.getElementById('filtro-categorias');
     var categoriaAtiva = 'todas';
-
     function filtrar() {
-        var termo = (busca.value || '').toLowerCase().trim();
-        var visiveis = 0;
-
+        var termo = (busca.value || '').toLowerCase().trim(), visiveis = 0;
         document.querySelectorAll('.produto-card').forEach(function (card) {
-            var ok =
-                (categoriaAtiva === 'todas' ||
-                    card.dataset.categoria === categoriaAtiva) &&
-                card.dataset.nome.toLowerCase().indexOf(termo) !== -1;
-
+            var ok = (categoriaAtiva === 'todas' || card.dataset.categoria === categoriaAtiva) &&
+                     card.dataset.nome.toLowerCase().indexOf(termo) !== -1;
             card.style.display = ok ? '' : 'none';
-
-            if (ok) {
-                visiveis++;
-            }
+            if (ok) { visiveis++; }
         });
-
         var aviso = document.getElementById('catalogo-vazio');
-
-        if (aviso) {
-            aviso.classList.toggle('d-none', visiveis > 0);
-        }
+        if (aviso) { aviso.classList.toggle('d-none', visiveis > 0); }
     }
-
-    if (busca) {
-        busca.addEventListener('input', filtrar);
-    }
-
+    if (busca) { busca.addEventListener('input', filtrar); }
     if (pills) {
         pills.addEventListener('click', function (e) {
             var pill = e.target.closest('.pill');
-
-            if (!pill) {
-                return;
-            }
-
+            if (!pill) { return; }
             e.preventDefault();
-
-            pills.querySelectorAll('.pill').forEach(function (p) {
-                p.classList.remove('active');
-            });
-
+            pills.querySelectorAll('.pill').forEach(function (p) { p.classList.remove('active'); });
             pill.classList.add('active');
             categoriaAtiva = pill.dataset.categoria;
             filtrar();

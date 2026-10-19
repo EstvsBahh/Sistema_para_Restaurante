@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Categorias{% endblock %}
 
 {% block content %}
@@ -8,61 +7,27 @@
         <h1 class="page-title">Categorias</h1>
         <p class="page-subtitle">Organize o cardápio em grupos para encontrar os produtos mais rápido.</p>
     </div>
-
-    <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
-        <i class="fa-solid fa-plus me-1"></i> Nova categoria
-    </button>
+    <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#modalNovaCategoria"><i class="fa-solid fa-plus me-1"></i> Nova categoria</button>
 </div>
 
 <div class="card">
     {% if categorias %}
     <div class="table-responsive">
         <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Categoria</th>
-                    <th>Descrição</th>
-                    <th class="text-center">Produtos</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-
+            <thead><tr><th>Categoria</th><th>Descrição</th><th class="text-center">Produtos</th><th class="text-end">Ações</th></tr></thead>
             <tbody>
                 {% for categoria in categorias %}
                 {% set total = categoria.produtos.count() %}
                 <tr>
-                    <td class="fw-semibold">
-                        <i class="fa-solid fa-tag text-secondary me-2"></i>
-                        {{ categoria.nome }}
-                    </td>
-
-                    <td class="text-secondary">
-                        {{ categoria.descricao or '—' }}
-                    </td>
-
-                    <td class="text-center">
-                        <a class="link-row fw-medium" href="{{ url_for('produtos.listar', categoria=categoria.id) }}">
-                            {{ total }}
-                        </a>
-                    </td>
-
+                    <td class="fw-semibold"><i class="fa-solid fa-tag text-secondary me-2"></i>{{ categoria.nome }}</td>
+                    <td class="text-secondary">{{ categoria.descricao or '—' }}</td>
+                    <td class="text-center"><a class="link-row fw-medium" href="{{ url_for('produtos.listar', categoria=categoria.id) }}">{{ total }}</a></td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-sm btn-outline-secondary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalEditarCategoria"
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEditarCategoria"
                                 data-action="{{ url_for('categorias.editar', categoria_id=categoria.id) }}"
-                                data-campo-nome="{{ categoria.nome }}"
-                                data-campo-descricao="{{ categoria.descricao or '' }}">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-
-                        <form class="d-inline"
-                              method="post"
-                              action="{{ url_for('categorias.excluir', categoria_id=categoria.id) }}"
-                              data-confirm="Excluir a categoria {{ categoria.nome }}?">
-                            <button class="btn btn-sm btn-outline-danger" {{ 'disabled title="Possui produtos"' if total }}>
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                                data-campo-nome="{{ categoria.nome }}" data-campo-descricao="{{ categoria.descricao or '' }}"><i class="fa-solid fa-pen"></i></button>
+                        <form class="d-inline" method="post" action="{{ url_for('categorias.excluir', categoria_id=categoria.id) }}" data-confirm="Excluir a categoria {{ categoria.nome }}?">
+                            <button class="btn btn-sm btn-outline-danger" {{ 'disabled title="Possui produtos"' if total }}><i class="fa-solid fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
@@ -70,71 +35,33 @@
             </tbody>
         </table>
     </div>
-
     {% else %}
-    <div class="empty-state">
-        <i class="fa-solid fa-tags"></i>
-        Nenhuma categoria cadastrada. Comece criando “Entradas”, “Bebidas”...
-    </div>
+    <div class="empty-state"><i class="fa-solid fa-tags"></i>Nenhuma categoria cadastrada. Comece criando “Entradas”, “Bebidas”...</div>
     {% endif %}
 </div>
 
-<!-- Modal: nova categoria -->
 <div class="modal fade" id="modalNovaCategoria" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content" method="post" action="{{ url_for('categorias.criar') }}">
-            <div class="modal-header">
-                <h5 class="modal-title">Nova categoria</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
+            <div class="modal-header"><h5 class="modal-title">Nova categoria</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Nome</label>
-                    <input type="text" name="nome" maxlength="80" class="form-control" required>
-                </div>
-
-                <div>
-                    <label class="form-label">
-                        Descrição <span class="text-secondary fw-normal">(opcional)</span>
-                    </label>
-                    <input type="text" name="descricao" maxlength="255" class="form-control">
-                </div>
+                <div class="mb-3"><label class="form-label">Nome</label><input type="text" name="nome" maxlength="80" class="form-control" required></div>
+                <div><label class="form-label">Descrição <span class="text-secondary fw-normal">(opcional)</span></label><input type="text" name="descricao" maxlength="255" class="form-control"></div>
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-brand">Cadastrar</button>
-            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-brand">Cadastrar</button></div>
         </form>
     </div>
 </div>
 
-<!-- Modal: editar categoria -->
 <div class="modal fade" id="modalEditarCategoria" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content" method="post" data-modal-form>
-            <div class="modal-header">
-                <h5 class="modal-title">Editar categoria</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
+            <div class="modal-header"><h5 class="modal-title">Editar categoria</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Nome</label>
-                    <input type="text" name="nome" maxlength="80" class="form-control" required>
-                </div>
-
-                <div>
-                    <label class="form-label">Descrição</label>
-                    <input type="text" name="descricao" maxlength="255" class="form-control">
-                </div>
+                <div class="mb-3"><label class="form-label">Nome</label><input type="text" name="nome" maxlength="80" class="form-control" required></div>
+                <div><label class="form-label">Descrição</label><input type="text" name="descricao" maxlength="255" class="form-control"></div>
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-brand">Salvar</button>
-            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-brand">Salvar</button></div>
         </form>
     </div>
 </div>

@@ -4,7 +4,7 @@ from extensions import db
 
 
 ZERO = Decimal("0.00")
-FORMA_DINHEIRO = "dinheiro"
+FORMA_DINHEIRO = "dinheiro"  
 
 class Caixa(db.Model):
     __tablename__ = "caixas"
@@ -16,7 +16,7 @@ class Caixa(db.Model):
     responsavel = db.Column(db.String(80), nullable=False)
     status = db.Column(db.String(20), nullable=False, default=ABERTO, index=True)
     saldo_inicial = db.Column(db.Numeric(10, 2), nullable=False, default=0)
-    saldo_final = db.Column(db.Numeric(10, 2)) # valor contado no fechamento
+    saldo_final = db.Column(db.Numeric(10, 2))  
     aberto_em = db.Column(db.DateTime, nullable=False, default=datetime.now)
     fechado_em = db.Column(db.DateTime)
     observacao = db.Column(db.String(255))
