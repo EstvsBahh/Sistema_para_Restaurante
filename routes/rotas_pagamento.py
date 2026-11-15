@@ -1,5 +1,10 @@
+import csv
+import io
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+
+from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
+
 from extensions import db
 from models.caixa import Caixa, MovimentacaoCaixa
 from models.pagamento import Pagamento
@@ -52,6 +57,7 @@ def abrir_caixa():
         flash("Caixa aberto. Bom trabalho!", "success")
     return redirect(url_for("pagamentos.caixa"))
 
+
 @pagamento_bp.route("/caixa/fechar", methods=["POST"])
 def fechar_caixa():
     caixa = Caixa.atual()
@@ -70,6 +76,7 @@ def fechar_caixa():
         else:
             flash("Caixa fechado com diferença entre o contado e o esperado. Veja o histórico.", "warning")
     return redirect(url_for("pagamentos.caixa"))
+
 
 @pagamento_bp.route("/caixa/movimentacao", methods=["POST"])
 def movimentar():
@@ -91,6 +98,7 @@ def movimentar():
         db.session.commit()
         flash("Movimentação registrada.", "success")
     return redirect(url_for("pagamentos.caixa"))
+
 
 @pagamento_bp.route("/pedidos/<int:pedido_id>/pagar", methods=["POST"])
 def pagar(pedido_id):
@@ -124,7 +132,7 @@ def pagar(pedido_id):
         pedido=pedido, caixa=caixa, forma=forma, valor=total, taxa_servico=taxa, valor_recebido=recebido
     )
     db.session.add(pagamento)  
-    pedido.marcar_pago()  
+    pedido.marcar_pago() 
     db.session.commit()
 
     mensagem = f"Pedido #{pedido.id} pago. Mesa {pedido.mesa.numero} liberada."
@@ -135,3 +143,141 @@ def pagar(pedido_id):
     flash(mensagem, "success")
     return redirect(url_for("pagamentos.caixa"))
 
+
+TIPOS_CSV = ("pagamentos", "dias", "produtos", "garcons")
+
+
+def _periodo():
+    def ler(nome, padrao):
+        try:
+            return date.fromisoformat(request.args.get(nome, ""))
+        except ValueError:
+            return padrao
+
+    fim = ler("fim", date.today())
+    inicio = ler("inicio", fim - timedelta(days=29))
+    if inicio > fim:
+        inicio, fim = fim, inicio
+    return inicio, fim
+
+
+def _dados_relatorio(inicio, fim):
+    limite_i = datetime.combine(inicio, time.min)
+    limite_f = datetime.combine(fim + timedelta(days=1), time.min)
+    pagamentos = (
+        Pagamento.query.filter(Pagamento.criado_em >= limite_i, Pagamento.criado_em < limite_f)
+        .order_by(Pagamento.criado_em)
+        .all()
+    )
+    zero = Decimal("0")
+    faturamento = sum((Decimal(str(p.valor)) for p in pagamentos), zero)
+    taxas = sum((Decimal(str(p.taxa_servico)) for p in pagamentos), zero)
+    itens = sum((p.pedido.quantidade_itens for p in pagamentos), 0)
+
+    dias, formas, produtos, garcons = {}, {}, {}, {}
+    for p in pagamentos:
+        valor, taxa = Decimal(str(p.valor)), Decimal(str(p.taxa_servico))
+        d = dias.setdefault(p.criado_em.date(), {"data": p.criado_em.date(), "pedidos": 0, "itens": 0, "taxas": zero, "total": zero})
+        d["pedidos"] += 1
+        d["itens"] += p.pedido.quantidade_itens
+        d["taxas"] += taxa
+        d["total"] += valor
+        f = formas.setdefault(p.forma, {"forma": p.forma, "pedidos": 0, "total": zero})
+        f["pedidos"] += 1
+        f["total"] += valor
+        g = garcons.setdefault(p.pedido.garcom_id, {"nome": p.pedido.garcom.nome, "pedidos": 0, "total": zero})
+        g["pedidos"] += 1
+        g["total"] += valor
+        for item in p.pedido.itens:
+            pr = produtos.setdefault(item.produto_id, {"nome": item.produto.nome, "quantidade": 0, "total": zero})
+            pr["quantidade"] += item.quantidade
+            pr["total"] += item.subtotal
+
+    return {
+        "pagamentos": pagamentos,
+        "totais": {
+            "pedidos": len(pagamentos),
+            "faturamento": faturamento,
+            "taxas": taxas,
+            "itens": itens,
+            "ticket": faturamento / len(pagamentos) if pagamentos else zero,
+        },
+        "dias": sorted(dias.values(), key=lambda x: x["data"]),
+        "formas": sorted(formas.values(), key=lambda x: x["total"], reverse=True),
+        "produtos": sorted(produtos.values(), key=lambda x: (-x["quantidade"], x["nome"])),
+        "garcons": sorted(garcons.values(), key=lambda x: x["total"], reverse=True),
+    }
+
+
+@pagamento_bp.route("/relatorios")
+def relatorios():
+    inicio, fim = _periodo()
+    dados = _dados_relatorio(inicio, fim)
+    hoje = date.today()
+    atalhos = [
+        ("Hoje", hoje, hoje),
+        ("7 dias", hoje - timedelta(days=6), hoje),
+        ("30 dias", hoje - timedelta(days=29), hoje),
+        ("Este mês", hoje.replace(day=1), hoje),
+    ]
+    grafico = {
+        "rotulos": [d["data"].strftime("%d/%m") for d in dados["dias"]],
+        "faturamento": [float(d["total"] - d["taxas"]) for d in dados["dias"]],
+        "taxas": [float(d["taxas"]) for d in dados["dias"]],
+    }
+    return render_template(
+        "relatorios.html",
+        inicio=inicio,
+        fim=fim,
+        atalhos=atalhos,
+        formas_rotulo=Pagamento.FORMAS,
+        grafico=grafico,
+        taxa_percentual=int(Pedido.TAXA_SERVICO * 100),
+        **dados,
+    )
+
+
+def _num(valor):
+    return f"{Decimal(str(valor)).quantize(Decimal('0.01')):.2f}".replace(".", ",")
+
+
+def _seguro(texto):
+    texto = str(texto)
+    return "'" + texto if texto[:1] in ("=", "+", "-", "@") else texto
+
+
+@pagamento_bp.route("/relatorios/exportar/<tipo>.csv")
+def exportar_csv(tipo):
+    if tipo not in TIPOS_CSV:
+        abort(404)
+    inicio, fim = _periodo()
+    dados = _dados_relatorio(inicio, fim)
+
+    if tipo == "pagamentos":
+        cabecalho = ["Data", "Hora", "Pedido", "Mesa", "Garçom", "Forma", "Itens", "Subtotal", "Taxa de serviço", "Total"]
+        linhas = [
+            [p.criado_em.strftime("%d/%m/%Y"), p.criado_em.strftime("%H:%M"), p.pedido_id, p.pedido.mesa.numero,
+             _seguro(p.pedido.garcom.nome), p.forma_label, p.pedido.quantidade_itens,
+             _num(p.subtotal), _num(p.taxa_servico), _num(p.valor)]
+            for p in dados["pagamentos"]
+        ]
+    elif tipo == "dias":
+        cabecalho = ["Data", "Pedidos", "Itens", "Taxa de serviço", "Faturamento"]
+        linhas = [[d["data"].strftime("%d/%m/%Y"), d["pedidos"], d["itens"], _num(d["taxas"]), _num(d["total"])] for d in dados["dias"]]
+    elif tipo == "produtos":
+        cabecalho = ["Produto", "Quantidade vendida", "Total em itens"]
+        linhas = [[_seguro(x["nome"]), x["quantidade"], _num(x["total"])] for x in dados["produtos"]]
+    else:
+        cabecalho = ["Garçom", "Pedidos", "Total atendido"]
+        linhas = [[_seguro(x["nome"]), x["pedidos"], _num(x["total"])] for x in dados["garcons"]]
+
+    saida = io.StringIO()
+    escritor = csv.writer(saida, delimiter=";", lineterminator="\r\n")
+    escritor.writerow(cabecalho)
+    escritor.writerows(linhas)
+    nome = f"relatorio_{tipo}_{inicio.isoformat()}_{fim.isoformat()}.csv"
+    return Response(
+        "\ufeff" + saida.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )

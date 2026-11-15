@@ -2,7 +2,6 @@ from datetime import datetime
 from decimal import Decimal
 from extensions import db
 
-
 ZERO = Decimal("0.00")
 FORMA_DINHEIRO = "dinheiro"  
 
@@ -38,14 +37,12 @@ class Caixa(db.Model):
 
     @classmethod
     def atual(cls):
-        """Retorna o caixa aberto no momento (ou None)."""
         return cls.query.filter_by(status=cls.ABERTO).order_by(cls.id.desc()).first()
 
     @property
     def aberto(self):
         return self.status == self.ABERTO
 
-    # ---- totais ----
     def total_forma(self, forma):
         return sum((Decimal(str(p.valor)) for p in self.pagamentos if p.forma == forma), ZERO)
 
@@ -55,7 +52,6 @@ class Caixa(db.Model):
 
     @property
     def total_taxas(self):
-        """Soma da taxa de serviço arrecadada nesta sessão."""
         return sum((Decimal(str(p.taxa_servico)) for p in self.pagamentos), ZERO)
 
     @property
@@ -74,7 +70,6 @@ class Caixa(db.Model):
 
     @property
     def saldo_dinheiro_esperado(self):
-        """Dinheiro que deveria estar na gaveta: inicial + vendas em dinheiro + entradas - saídas."""
         return (
             Decimal(str(self.saldo_inicial))
             + self.total_forma(FORMA_DINHEIRO)
@@ -84,7 +79,6 @@ class Caixa(db.Model):
 
     @property
     def diferenca(self):
-        """Sobra (+) ou falta (-) apurada no fechamento."""
         if self.saldo_final is None:
             return None
         return Decimal(str(self.saldo_final)) - self.saldo_dinheiro_esperado
@@ -97,7 +91,6 @@ class Caixa(db.Model):
 
 
 class MovimentacaoCaixa(db.Model):
-    """Entrada (suprimento) ou saída (sangria) de dinheiro do caixa."""
     __tablename__ = "movimentacoes_caixa"
 
     ENTRADA = "entrada"

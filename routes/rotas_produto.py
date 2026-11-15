@@ -1,8 +1,11 @@
 from decimal import Decimal, InvalidOperation
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+
 from extensions import db
 from models.categoria import Categoria
 from models.produto import Produto
+
 produto_bp = Blueprint("produtos", __name__)
 
 
@@ -97,6 +100,7 @@ def editar(produto_id):
 
 @produto_bp.route("/produtos/<int:produto_id>/alternar", methods=["POST"])
 def alternar(produto_id):
+    """Coloca ou retira o produto do cardápio sem apagar o histórico."""
     produto = db.get_or_404(Produto, produto_id)
     produto.ativo = not produto.ativo
     db.session.commit()

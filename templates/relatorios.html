@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Relatórios{% endblock %}
+
+{% block content %}
+{% set qs = {'inicio': inicio.isoformat(), 'fim': fim.isoformat()} %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Relatórios de vendas</h1>
+        <p class="page-subtitle">{{ inicio.strftime('%d/%m/%Y') }} a {{ fim.strftime('%d/%m/%Y') }} · considera pedidos pagos no período</p>
+    </div>
+    <div class="exportar">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('pagamentos.exportar_csv', tipo='pagamentos', **qs) }}"><i class="fa-solid fa-file-csv"></i> Vendas (CSV)</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('pagamentos.exportar_csv', tipo='dias', **qs) }}"><i class="fa-solid fa-file-csv"></i> Por dia</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('pagamentos.exportar_csv', tipo='produtos', **qs) }}"><i class="fa-solid fa-file-csv"></i> Produtos</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('pagamentos.exportar_csv', tipo='garcons', **qs) }}"><i class="fa-solid fa-file-csv"></i> Garçons</a>
+    </div>
+</div>
+
+<!-- Período -->
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap gap-3 justify-content-between align-items-end">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-auto"><label class="form-label" for="r-inicio">De</label><input type="date" id="r-inicio" name="inicio" value="{{ inicio.isoformat() }}" class="form-control" required></div>
+            <div class="col-auto"><label class="form-label" for="r-fim">Até</label><input type="date" id="r-fim" name="fim" value="{{ fim.isoformat() }}" class="form-control" required></div>
+            <div class="col-auto"><button class="btn btn-brand">Aplicar</button></div>
+        </form>
+        <div class="periodo-atalhos">
+            {% for rotulo, ini, f in atalhos %}
+            <a href="{{ url_for('pagamentos.relatorios', inicio=ini.isoformat(), fim=f.isoformat()) }}" class="{{ 'active' if ini == inicio and f == fim }}">{{ rotulo }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Resumo -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div><div class="stat-label">Faturamento</div><div class="stat-value">{{ totais.faturamento|brl }}</div><div class="stat-hint">itens + taxa de serviço</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div><div class="stat-label">Pedidos pagos</div><div class="stat-value">{{ totais.pedidos }}</div><div class="stat-hint">{{ totais.itens }} itens vendidos</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div><div class="stat-label">Ticket médio</div><div class="stat-value">{{ totais.ticket|brl }}</div><div class="stat-hint">por pedido</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div><div class="stat-label">Taxa de serviço</div><div class="stat-value">{{ totais.taxas|brl }}</div><div class="stat-hint">{{ taxa_percentual }}% opcional</div></div></div></div>
+</div>
+
+{% if totais.pedidos == 0 %}
+<div class="card"><div class="empty-state"><i class="fa-solid fa-chart-line"></i>Nenhuma venda neste período. Escolha outras datas ou receba pagamentos no caixa.</div></div>
+{% else %}
+<div class="row g-4 mb-4">
+    <div class="col-12 col-xl-8">
+        <div class="card h-100">
+            <div class="card-header">Faturamento por dia</div>
+            <div class="card-body"><div class="chart-box"><canvas id="grafico-dias" aria-label="Faturamento por dia" role="img"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">Formas de pagamento</div>
+            <div class="card-body">
+                {% for f in formas %}
+                {% set pct = (f.total / totais.faturamento * 100) if totais.faturamento else 0 %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1"><span>{{ formas_rotulo[f.forma] }} <span class="text-secondary">· {{ f.pedidos }}</span></span><span>{{ f.total|brl }}</span></div>
+                    <div class="rank-bar"><span style="width: {{ '%.1f'|format(pct) }}%"></span></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Produtos mais vendidos</div>
+            <div class="table-responsive"><table class="table">
+                <thead><tr><th>Produto</th><th class="text-end">Qtd.</th><th class="text-end">Total</th></tr></thead>
+                <tbody>{% for x in produtos[:10] %}<tr><td>{{ x.nome }}</td><td class="text-end">{{ x.quantidade }}</td><td class="text-end">{{ x.total|brl }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Desempenho dos garçons</div>
+            <div class="table-responsive"><table class="table">
+                <thead><tr><th>Garçom</th><th class="text-end">Pedidos</th><th class="text-end">Total</th></tr></thead>
+                <tbody>{% for x in garcons %}<tr><td>{{ x.nome }}</td><td class="text-end">{{ x.pedidos }}</td><td class="text-end">{{ x.total|brl }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Vendas do período</div>
+    <div class="table-responsive"><table class="table">
+        <thead><tr><th>Data</th><th>Pedido</th><th>Mesa</th><th>Garçom</th><th>Forma</th><th class="text-end">Taxa</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+            {% for p in pagamentos|reverse %}
+            <tr>
+                <td class="text-secondary">{{ p.criado_em|data_hora }}</td>
+                <td><a class="link-row" href="{{ url_for('pedidos.ver', pedido_id=p.pedido_id) }}">#{{ p.pedido_id }}</a></td>
+                <td>Mesa {{ p.pedido.mesa.numero }}</td>
+                <td>{{ p.pedido.garcom.nome }}</td>
+                <td>{{ p.forma_label }}</td>
+                <td class="text-end text-secondary">{{ p.taxa_servico|brl if p.taxa_cobrada else '—' }}</td>
+                <td class="text-end">{{ p.valor|brl }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if totais.pedidos %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
+<script>
+    graficoDias('grafico-dias', {{ grafico|tojson }});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Painel{% endblock %} · {{ nome_restaurante }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -40,7 +40,10 @@
                     <a class="nav-link {{ 'active' if ep == 'pedidos.cozinha' }}" href="{{ url_for('pedidos.cozinha') }}"><i class="fa-solid fa-fire-burner me-1"></i> Cozinha</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ 'active' if bp == 'pagamentos' }}" href="{{ url_for('pagamentos.caixa') }}"><i class="fa-solid fa-cash-register me-1"></i> Caixa</a>
+                    <a class="nav-link {{ 'active' if ep in ('pagamentos.caixa', 'pagamentos.abrir_caixa') }}" href="{{ url_for('pagamentos.caixa') }}"><i class="fa-solid fa-cash-register me-1"></i> Caixa</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if ep in ('pagamentos.relatorios', 'pagamentos.exportar_csv') }}" href="{{ url_for('pagamentos.relatorios') }}"><i class="fa-solid fa-chart-line me-1"></i> Relatórios</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle {{ 'active' if bp in ('produtos', 'categorias') }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -81,11 +84,14 @@
     {% block content %}{% endblock %}
 </main>
 
-<footer class="app-footer">{{ nome_restaurante }} · Sistema de Gestão de Restaurante · {{ ano_atual }}</footer>
+<footer class="app-footer">{{ nome_restaurante }} · {{ ano_atual }}</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-
+    // Campos numéricos: só aceitam os caracteres permitidos para o tipo do campo.
+    //   data-numero="inteiro"  -> apenas dígitos (quantidades, número da mesa, estoque)
+    //   data-numero="decimal"  -> dígitos e um separador decimal (. ou ,) com até 2 casas (dinheiro)
+    //   data-numero="telefone" -> dígitos, espaço e ( ) + -
     (function () {
         var permitido = { inteiro: /^\d*$/, decimal: /^[\d.,]*$/, telefone: /^[\d\s()+\-]*$/ };
 
@@ -100,12 +106,14 @@
             return inteira + valor.charAt(indice) + decimais;
         }
 
+        // Impede a digitação de caracteres inválidos (teclado, colar e arrastar)
         document.addEventListener('beforeinput', function (e) {
             var campo = e.target;
             if (!campo.dataset || !campo.dataset.numero || !e.data) { return; }
             if (!permitido[campo.dataset.numero].test(e.data)) { e.preventDefault(); }
         });
 
+        // Rede de segurança: limpa o valor caso algo passe (ex: colar texto misto)
         document.addEventListener('input', function (e) {
             var campo = e.target;
             if (!campo.dataset || !campo.dataset.numero) { return; }
@@ -114,15 +122,19 @@
         });
     })();
 
+    // Mensagens de sucesso/info somem sozinhas após alguns segundos
     document.querySelectorAll('.flash-auto.alert-success, .flash-auto.alert-info').forEach(function (alerta) {
         setTimeout(function () { bootstrap.Alert.getOrCreateInstance(alerta).close(); }, 5000);
     });
 
+    // Formulários com data-confirm pedem confirmação antes de enviar
     document.addEventListener('submit', function (evento) {
         var mensagem = evento.target.dataset.confirm;
         if (mensagem && !window.confirm(mensagem)) { evento.preventDefault(); }
     });
 
+    // Modal de edição reutilizável: o botão que abre o modal informa a URL (data-action)
+    // e os valores dos campos (data-campo-nome="..."), que são copiados para o formulário.
     document.addEventListener('show.bs.modal', function (evento) {
         var gatilho = evento.relatedTarget;
         var formulario = evento.target.querySelector('form[data-modal-form]');

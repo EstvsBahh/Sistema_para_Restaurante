@@ -9,7 +9,7 @@
     </div>
     {% if caixa %}
     <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-outline-secondary bg-white" data-bs-toggle="modal" data-bs-target="#modalMovimentacao"><i class="fa-solid fa-right-left me-1"></i> Suprimento / Sangria</button>
+        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalMovimentacao"><i class="fa-solid fa-right-left me-1"></i> Suprimento / Sangria</button>
         <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#modalFechar"><i class="fa-solid fa-lock me-1"></i> Fechar caixa</button>
     </div>
     {% endif %}
@@ -106,7 +106,7 @@
             {% if caixa.pagamentos %}
             <div class="table-responsive">
                 <table class="table">
-                    <thead><tr><th>Hora</th><th>Pedido</th><th>Mesa</th><th>Forma</th><th class="text-end">Taxa</th><th class="text-end">Total</th></tr></thead>
+                    <thead><tr><th>Hora</th><th>Pedido</th><th>Mesa</th><th>Forma</th><th class="text-end">Taxa</th><th class="text-end">Total</th><th></th></tr></thead>
                     <tbody>
                         {% for pagamento in caixa.pagamentos %}
                         <tr>
@@ -116,6 +116,7 @@
                             <td>{{ pagamento.forma_label }}</td>
                             <td class="text-end text-secondary">{{ pagamento.taxa_servico|brl if pagamento.taxa_cobrada else '—' }}</td>
                             <td class="text-end fw-semibold">{{ pagamento.valor|brl }}</td>
+                            <td class="text-end"><a class="link-row small" target="_blank" rel="noopener" href="{{ url_for('pedidos.comprovante', pedido_id=pagamento.pedido_id) }}" title="Imprimir comprovante"><i class="fa-solid fa-print"></i></a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

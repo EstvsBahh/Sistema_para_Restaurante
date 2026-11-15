@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+
 from extensions import db
 from models.categoria import Categoria
 from models.garcom import Garcom
@@ -16,7 +19,6 @@ def _voltar(pedido):
     if destino == "mesas":
         return redirect(url_for("mesas.listar"))
     return redirect(url_for("pedidos.ver", pedido_id=pedido.id))
-
 
 
 @pedido_bp.route("/pedidos/novo", methods=["GET"])
@@ -46,7 +48,6 @@ def criar():
     if existente:
         flash(f"A mesa {mesa.numero} já tem o pedido #{existente.id} em andamento.", "warning")
         return redirect(url_for("pedidos.ver", pedido_id=existente.id))
-
 
     ids = request.form.getlist("produto_id")
     quantidades = request.form.getlist("quantidade")
@@ -94,6 +95,24 @@ def criar():
     return redirect(url_for("pedidos.ver", pedido_id=pedido.id))
 
 
+@pedido_bp.route("/pedidos/<int:pedido_id>/comprovante")
+def comprovante(pedido_id):
+    pedido = db.get_or_404(Pedido, pedido_id)
+    if pedido.status == Pedido.CANCELADO:
+        flash("Pedidos cancelados não têm comprovante.", "warning")
+        return redirect(url_for("pedidos.ver", pedido_id=pedido.id))
+    pessoas = min(max(request.args.get("pessoas", 1, type=int) or 1, 1), 50)
+    com_taxa = request.args.get("taxa") != "0" or pedido.pagamento is not None
+    return render_template(
+        "comprovante.html",
+        pedido=pedido,
+        pessoas=pessoas,
+        com_taxa=com_taxa,
+        partes=pedido.dividir_conta(pessoas, com_taxa),
+        taxa_percentual=int(Pedido.TAXA_SERVICO * 100),
+        agora=datetime.now(),
+    )
+
 
 @pedido_bp.route("/pedidos/<int:pedido_id>")
 def ver(pedido_id):
@@ -126,7 +145,7 @@ def adicionar_item(pedido_id):
     try:
         pedido.adicionar_item(produto, quantidade, request.form.get("observacao"))
         if pedido.status in (Pedido.PRONTO, Pedido.ENTREGUE):
-            pedido.alterar_status(Pedido.EM_PREPARO) 
+            pedido.alterar_status(Pedido.EM_PREPARO)  
             flash("Novo item enviado: o pedido voltou para a cozinha.", "info")
         db.session.commit()
         flash(f"{quantidade}x {produto.nome} adicionado.", "success")
@@ -153,7 +172,6 @@ def remover_item(pedido_id, item_id):
         db.session.commit()
         flash(f"{nome} removido e devolvido ao estoque.", "success")
     return redirect(url_for("pedidos.ver", pedido_id=pedido.id))
-
 
 
 @pedido_bp.route("/pedidos/<int:pedido_id>/avancar", methods=["POST"])
@@ -183,7 +201,6 @@ def cancelar(pedido_id):
     db.session.commit()
     flash(f"Pedido #{pedido.id} cancelado, estoque devolvido e mesa liberada.", "info")
     return redirect(url_for("mesas.listar"))
-
 
 
 @pedido_bp.route("/cozinha")

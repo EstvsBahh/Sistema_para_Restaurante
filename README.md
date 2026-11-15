@@ -85,14 +85,28 @@ python seed.py
 python app.py
 ```
 
-No arquivo `.env`, defina:
+Acesse **http://127.0.0.1:5000**. As tabelas são criadas automaticamente no banco na primeira execução.
+
+### Banco de dados (MySQL / Aiven)
+
+O sistema usa **MySQL**. Crie o arquivo `.env` (modelo em `.env.example`) com os dados do banco:
 
 ```
-DATABASE_URL=mysql+pymysql://usuario:senha@host:3306/nome_do_banco
-# DB_SSL=1   (apenas se o provedor exigir SSL, ex: Aiven)
+DB_USUARIO=...
+DB_SENHA=...
+DB_HOST=...
+DB_PORTA=3306
+DB_NOME=...
 ```
 
-> **Atualizando de uma versão anterior:** esta versão removeu a coluna `estoque_minimo` (produtos) e criou `taxa_servico` (pagamentos). O `create_all` não altera tabelas já existentes, então apague o arquivo `restaurante.db` (ou as tabelas do MySQL) e rode `python seed.py` novamente.
+A conexão usa SSL por padrão, como o Aiven exige. Para um MySQL local sem SSL, acrescente `DB_SSL=0` ao `.env`. As tabelas são criadas automaticamente na primeira execução.
+
+> **Atualizando de uma versão anterior:** esta versão removeu a coluna `estoque_minimo` (produtos) e criou `taxa_servico` (pagamentos). O `create_all` não altera tabelas já existentes, então apague as tabelas do banco e rode `python seed.py` novamente — ou, para manter os dados, execute no MySQL:
+>
+> ```sql
+> ALTER TABLE pagamentos ADD COLUMN taxa_servico DECIMAL(10,2) NOT NULL DEFAULT 0;
+> ALTER TABLE produtos DROP COLUMN estoque_minimo;
+> ```
 
 > As tabelas deste projeto usam nomes no plural (`mesas`, `produtos`, `pedidos`...). Se o banco MySQL já tiver tabelas de uma versão anterior (`mesa`, `produto`...), elas não são alteradas — use um banco novo ou apague as tabelas antigas.
 
@@ -105,6 +119,14 @@ DATABASE_URL=mysql+pymysql://usuario:senha@host:3306/nome_do_banco
 4. Cozinha marca **pronto** → garçom marca **entregue**.
 5. **Caixa** → receber o pagamento → pedido pago e mesa liberada.
 6. Ao fim do dia, **fechar o caixa** e conferir a diferença.
+
+
+## Novidades da ultima versão
+
+- **Comprovante imprimível e divisão de conta** — no pedido, botão "Prévia da conta" (antes do pagamento) ou "Comprovante" (recibo, depois). Divide a conta por N pessoas em centavos exatos (a soma sempre fecha o total) e imprime em layout limpo.
+- **Gráficos de vendas** — o Dashboard mostra vendas dos últimos 7 dias (itens + taxa de serviço) e a participação das formas de pagamento.
+- **Relatórios** (menu "Relatórios") — filtro por período, resumo, produtos mais vendidos, desempenho dos garçons e exportação em CSV (vendas, por dia, produtos, garçons), pronto para abrir no Excel.
+- **Novo visual** — tema escuro em carvão e champanhe, títulos serifados (Cormorant Garamond + Jost). A estrutura do sistema não mudou; não há alterações no banco de dados.
 
 
 ## Integrantes

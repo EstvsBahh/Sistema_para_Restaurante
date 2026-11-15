@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
+
 from extensions import db
 from models.item_pedido import ItemPedido
 
@@ -22,11 +23,10 @@ class Pedido(db.Model):
         PAGO: "Pago",
         CANCELADO: "Cancelado",
     }
-    ATIVOS = (ABERTO, EM_PREPARO, PRONTO, ENTREGUE) # ainda em atendimento
+    ATIVOS = (ABERTO, EM_PREPARO, PRONTO, ENTREGUE)  
     FLUXO = (ABERTO, EM_PREPARO, PRONTO, ENTREGUE, PAGO)
     PROXIMO = {ABERTO: EM_PREPARO, EM_PREPARO: PRONTO, PRONTO: ENTREGUE}
 
-    # Taxa de serviço opcional, cobrada no caixa sobre o total do pedido (10%)
     TAXA_SERVICO = Decimal("0.10")
 
     id = db.Column(db.Integer, primary_key=True)
@@ -111,7 +111,7 @@ class Pedido(db.Model):
             raise ValueError("A quantidade deve ser maior que zero.")
 
         observacao = (observacao or "").strip() or None
-        produto.dar_baixa(quantidade)
+        produto.dar_baixa(quantidade)  
 
         for item in self.itens:
             if item.produto_id == produto.id and (item.observacao or None) == observacao:
@@ -130,6 +130,22 @@ class Pedido(db.Model):
     def remover_item(self, item):
         item.produto.dar_entrada(item.quantidade)
         self.itens.remove(item)
+
+    def valor_para_divisao(self, com_taxa=True):
+        if self.pagamento:
+            return Decimal(str(self.pagamento.valor))
+        return self.total + (self.calcular_taxa_servico() if com_taxa else Decimal("0"))
+
+    def dividir_conta(self, pessoas, com_taxa=True):
+        pessoas = max(int(pessoas), 1)
+        centavos = int((self.valor_para_divisao(com_taxa) * 100).to_integral_value(rounding=ROUND_HALF_UP))
+        base, resto = divmod(centavos, pessoas)
+        partes = []
+        if resto:
+            partes.append((Decimal(base + 1) / 100, resto))
+        if pessoas - resto:
+            partes.append((Decimal(base) / 100, pessoas - resto))
+        return partes
 
     def alterar_status(self, novo_status):
         self.status = novo_status

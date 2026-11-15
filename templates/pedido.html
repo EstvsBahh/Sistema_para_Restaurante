@@ -119,6 +119,10 @@
                     <a href="{{ url_for('pagamentos.caixa', pagar=pedido.id) }}" class="btn btn-dark"><i class="fa-solid fa-cash-register me-1"></i> Receber pagamento</a>
                     {% endif %}
 
+                    {% if pedido.status != 'cancelado' and pedido.itens %}
+                    <a href="{{ url_for('pedidos.comprovante', pedido_id=pedido.id) }}" class="btn btn-outline-secondary" target="_blank" rel="noopener"><i class="fa-solid fa-print me-1"></i> {{ 'Comprovante' if pedido.pagamento else 'Prévia da conta' }}</a>
+                    {% endif %}
+
                     {% if pedido.ativo %}
                     <form method="post" action="{{ url_for('pedidos.cancelar', pedido_id=pedido.id) }}" data-confirm="Cancelar o pedido #{{ pedido.id }}? Os itens voltam ao estoque e a mesa é liberada.">
                         <button class="btn btn-outline-danger w-100"><i class="fa-solid fa-ban me-1"></i> Cancelar pedido</button>
@@ -127,6 +131,28 @@
                 </div>
             </div>
         </div>
+
+        {% if pedido.itens and pedido.status != 'cancelado' %}
+        <div class="card mb-4">
+            <div class="card-header">Dividir a conta</div>
+            <div class="card-body">
+                <form method="get" action="{{ url_for('pedidos.comprovante', pedido_id=pedido.id) }}" target="_blank" class="row g-2 align-items-end">
+                    <div class="col-5">
+                        <label class="form-label" for="div-pessoas">Pessoas</label>
+                        <input type="text" inputmode="numeric" data-numero="inteiro" autocomplete="off" id="div-pessoas" name="pessoas" value="2" class="form-control" required>
+                    </div>
+                    <div class="col-7"><button class="btn btn-outline-secondary w-100">Ver divisão</button></div>
+                    {% if not pedido.pagamento %}
+                    <div class="col-12 form-check form-switch ms-2 mt-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="div-taxa" checked onchange="this.form.querySelector('[name=taxa]').disabled = this.checked">
+                        <label class="form-check-label small" for="div-taxa">Incluir taxa de serviço de {{ taxa_percentual }}%</label>
+                        <input type="hidden" name="taxa" value="0" disabled>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% endif %}
 
         {% if pedido.pagamento %}
         <div class="card">

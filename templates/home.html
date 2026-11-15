@@ -9,7 +9,7 @@
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="{{ url_for('pedidos.novo') }}" class="btn btn-brand"><i class="fa-solid fa-plus me-1"></i> Novo pedido</a>
-        <a href="{{ url_for('mesas.listar') }}" class="btn btn-outline-secondary bg-white"><i class="fa-solid fa-table-cells-large me-1"></i> Ver mesas</a>
+        <a href="{{ url_for('mesas.listar') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-table-cells-large me-1"></i> Ver mesas</a>
     </div>
 </div>
 
@@ -90,6 +90,24 @@
             {% endif %}
         </div>
 
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center"><span>Vendas dos últimos 7 dias</span><a href="{{ url_for('pagamentos.relatorios') }}" class="link-row">Relatórios →</a></div>
+                    <div class="card-body"><div class="chart-box compacto"><canvas id="grafico-dias" role="img" aria-label="Vendas dos últimos 7 dias"></canvas></div></div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-header">Formas de pagamento · 30 dias</div>
+                    <div class="card-body">
+                        {% if grafico.formas %}<div class="chart-box compacto"><canvas id="grafico-formas" role="img" aria-label="Formas de pagamento"></canvas></div>
+                        {% else %}<div class="empty-state py-4">Sem pagamentos no período.</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header"><i class="fa-solid fa-table-cells-large me-2 text-secondary"></i>Ocupação do salão</div>
             <div class="card-body">
@@ -144,4 +162,13 @@
 
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
+<script>
+    graficoDias('grafico-dias', {{ grafico|tojson }});
+    {% if grafico.formas %}graficoFormas('grafico-formas', {{ grafico.formas|tojson }});{% endif %}
+</script>
 {% endblock %}
